@@ -47,11 +47,11 @@ ChartJS.register({
 interface SentimentAnalysisProps {
   selectedBrands: Brand[];
   posts: Record<Brand, (InstagramPost | TikTokPost)[] | undefined>;
-  selectedMonth: string;
-  onMonthChange: React.Dispatch<React.SetStateAction<string>>;
-}
+} 
 
-const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ selectedBrands, posts, selectedMonth, onMonthChange }) => {
+const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ selectedBrands, posts }) => {
+  // Local month state for sentiment analysis
+  const [selectedMonth, setSelectedMonth] = useState<string>('All (Feb-May)');
   // Local platform state for sentiment analysis
   const [localPlatform, setLocalPlatform] = useState<'Instagram' | 'TikTok'>('Instagram');
 
@@ -527,7 +527,7 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ selectedBrands, p
               id="sentiment-month-select"
               value={selectedMonth}
               label="Month"
-              onChange={(e: SelectChangeEvent<string>) => onMonthChange(e.target.value)}
+              onChange={(e: SelectChangeEvent<string>) => setSelectedMonth(e.target.value)}
               style={{ minWidth: 120 }}
             >
               <MenuItem value="All (Feb-May)">All</MenuItem>
