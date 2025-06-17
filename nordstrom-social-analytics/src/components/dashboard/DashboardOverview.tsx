@@ -198,38 +198,41 @@ const DashboardOverview: React.FC = () => {
           // Separate Nordstrom and competitor data
           if (brand === 'Nordstrom') {
             instagramData.posts.forEach(post => {
-              if (post) {
-                // Add basic metrics for Nordstrom
-                totalInstagramLikes += post.likesCount || 0;
-                totalInstagramComments += post.commentsCount || 0;
-                
-                // Track monthly engagement
-                if (post.timestamp) {
-                  try {
-                    const date = new Date(post.timestamp);
-                    const month = date.toLocaleString('default', { month: 'long' });
-                    
-                    if (!monthlyEngagement[month]) {
-                      monthlyEngagement[month] = { instagram: 0, tiktok: 0 };
-                    }
-                    
-                    monthlyEngagement[month].instagram += (post.likesCount || 0) + (post.commentsCount || 0);
-                  } catch (e) {
-                    console.error('Error processing Instagram post date:', e);
+              if (post && post.timestamp) {
+                const date = new Date(post.timestamp);
+                const month = date.toLocaleString('default', { month: 'long' });
+                const monthMatches = selectedMonth === 'All (Feb-May)' || month === selectedMonth;
+                if (monthMatches) {
+                  // Add basic metrics for Nordstrom
+                  totalInstagramLikes += post.likesCount || 0;
+                  totalInstagramComments += post.commentsCount || 0;
+                  totalInstagramPosts++;
+                }
+                // Track monthly engagement (for trend analysis, always track)
+                try {
+                  if (!monthlyEngagement[month]) {
+                    monthlyEngagement[month] = { instagram: 0, tiktok: 0 };
                   }
+                  monthlyEngagement[month].instagram += (post.likesCount || 0) + (post.commentsCount || 0);
+                } catch (e) {
+                  console.error('Error processing Instagram post date:', e);
                 }
               }
             });
-            totalInstagramPosts += instagramData.posts.length;
           } else if (brand === selectedCompetitor) {
             // Add metrics for the selected competitor
             instagramData.posts.forEach(post => {
-              if (post) {
-                competitorInstagramLikes += post.likesCount || 0;
-                competitorInstagramComments += post.commentsCount || 0;
+              if (post && post.timestamp) {
+                const date = new Date(post.timestamp);
+                const month = date.toLocaleString('default', { month: 'long' });
+                const monthMatches = selectedMonth === 'All (Feb-May)' || month === selectedMonth;
+                if (monthMatches) {
+                  competitorInstagramLikes += post.likesCount || 0;
+                  competitorInstagramComments += post.commentsCount || 0;
+                  competitorInstagramPosts++;
+                }
               }
             });
-            competitorInstagramPosts += instagramData.posts.length;
           }
         }
 
@@ -239,50 +242,56 @@ const DashboardOverview: React.FC = () => {
           // Separate Nordstrom and competitor data
           if (brand === 'Nordstrom') {
             tiktokData.posts.forEach(post => {
-              if (post) {
-                // Add basic metrics for Nordstrom
-                totalTikTokViews += post.playCount || 0;
-                totalTikTokLikes += post.diggCount || 0;
-                totalTikTokShares += post.shareCount || 0;
-                
-                // Track monthly engagement
-                if (post.createTime) {
-                  try {
-                    let date: Date;
-                    
-                    // Handle different date formats
-                    if (typeof post.createTime === 'string') {
-                      date = new Date(post.createTime);
-                    } else if (typeof post.createTime === 'number') {
-                      date = new Date(post.createTime * 1000); // Convert Unix timestamp to milliseconds
-                    } else {
-                      throw new Error('Invalid date format');
-                    }
-                    
-                    const month = date.toLocaleString('default', { month: 'long' });
-                    
-                    if (!monthlyEngagement[month]) {
-                      monthlyEngagement[month] = { instagram: 0, tiktok: 0 };
-                    }
-                    
-                    monthlyEngagement[month].tiktok += (post.diggCount || 0) + (post.commentCount || 0) + (post.shareCount || 0);
-                  } catch (e) {
-                    console.error('Error processing TikTok post date:', e);
+              if (post && post.createTime) {
+                let date: Date;
+                if (typeof post.createTime === 'string') {
+                  date = new Date(post.createTime);
+                } else if (typeof post.createTime === 'number') {
+                  date = new Date(post.createTime * 1000);
+                } else {
+                  return;
+                }
+                const month = date.toLocaleString('default', { month: 'long' });
+                const monthMatches = selectedMonth === 'All (Feb-May)' || month === selectedMonth;
+                if (monthMatches) {
+                  totalTikTokViews += post.playCount || 0;
+                  totalTikTokLikes += post.diggCount || 0;
+                  totalTikTokShares += post.shareCount || 0;
+                  totalTikTokPosts++;
+                }
+                // Track monthly engagement (for trend analysis, always track)
+                try {
+                  if (!monthlyEngagement[month]) {
+                    monthlyEngagement[month] = { instagram: 0, tiktok: 0 };
                   }
+                  monthlyEngagement[month].tiktok += (post.diggCount || 0) + (post.commentCount || 0) + (post.shareCount || 0);
+                } catch (e) {
+                  console.error('Error processing TikTok post date:', e);
                 }
               }
             });
-            totalTikTokPosts += tiktokData.posts.length;
           } else if (brand === selectedCompetitor) {
             // Add metrics for the selected competitor
             tiktokData.posts.forEach(post => {
-              if (post) {
-                competitorTikTokViews += post.playCount || 0;
-                competitorTikTokLikes += post.diggCount || 0;
-                competitorTikTokShares += post.shareCount || 0;
+              if (post && post.createTime) {
+                let date: Date;
+                if (typeof post.createTime === 'string') {
+                  date = new Date(post.createTime);
+                } else if (typeof post.createTime === 'number') {
+                  date = new Date(post.createTime * 1000);
+                } else {
+                  return;
+                }
+                const month = date.toLocaleString('default', { month: 'long' });
+                const monthMatches = selectedMonth === 'All (Feb-May)' || month === selectedMonth;
+                if (monthMatches) {
+                  competitorTikTokViews += post.playCount || 0;
+                  competitorTikTokLikes += post.diggCount || 0;
+                  competitorTikTokShares += post.shareCount || 0;
+                  competitorTikTokPosts++;
+                }
               }
             });
-            competitorTikTokPosts += tiktokData.posts.length;
           }
         }
       });
@@ -1232,44 +1241,12 @@ const DashboardOverview: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Sentiment Analysis Section */}
-      <div className="mt-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className={`rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg p-6`} /* Updated styling */
-        >
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold text-nordstrom-blue">
-              <FaIcons.FaChartPie className="inline-block mr-2 text-nordstrom-blue" />
-              Sentiment Analysis
-            </h2>
-          </div>
-          
-          {/* Sentiment Analysis with Platform and Month Filters */}
-          <SentimentAnalysis
-            selectedBrands={selectedBrands}
-            posts={selectedBrands.reduce((acc, brand) => {
-              // Always pass both Instagram and TikTok posts for all brands
-              const igPosts = socialData.instagram[brand]?.posts || [];
-              const tkPosts = socialData.tiktok[brand]?.posts || [];
-              acc[brand] = [...igPosts, ...tkPosts];
-              return acc;
-            }, {} as Record<Brand, (InstagramPost | TikTokPost)[]>)}
-            selectedMonth={selectedMonth}
-            onMonthChange={setSelectedMonth}
-          />
-        </motion.div>
-      </div>
-      
-      
       {/* Engagement Section */}
       <div className="mt-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9 }}
+          transition={{ delay: 0.7 }}
           className={`rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg p-6`} /* Updated styling */
         >
           <div className="mb-4">
@@ -1304,6 +1281,36 @@ const DashboardOverview: React.FC = () => {
           )}
         </motion.div>
       </div>
+      
+      {/* Sentiment Analysis Section */}
+      <div className="mt-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          className={`rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg p-6`} /* Updated styling */
+        >
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold text-nordstrom-blue">
+              <FaIcons.FaChartPie className="inline-block mr-2 text-nordstrom-blue" />
+              Sentiment Analysis
+            </h2>
+          </div>
+          
+          {/* Sentiment Analysis with Platform and Month Filters */}
+          <SentimentAnalysis
+            selectedBrands={selectedBrands}
+            posts={selectedBrands.reduce((acc, brand) => {
+              // Always pass both Instagram and TikTok posts for all brands
+              const igPosts = socialData.instagram[brand]?.posts || [];
+              const tkPosts = socialData.tiktok[brand]?.posts || [];
+              acc[brand] = [...igPosts, ...tkPosts];
+              return acc;
+            }, {} as Record<Brand, (InstagramPost | TikTokPost)[]>)}
+          />
+        </motion.div>
+      </div>
+      
       
       {/* Hashtag Section */}
       <div className="mt-8">
