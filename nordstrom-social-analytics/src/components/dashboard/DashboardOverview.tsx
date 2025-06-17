@@ -838,33 +838,7 @@ const DashboardOverview: React.FC = () => {
                 </h2>
                          <div className="flex gap-3">
               {/* Platform Selector */}
-              <ToggleButtonGroup
-  value={activePlatform}
-  exclusive
-  onChange={(_, newPlatform) => {
-    if (newPlatform) setActivePlatform(newPlatform);
-  }}
-  size="small"
-  aria-label="Platform"
-  sx={{
-    backgroundColor: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)',
-    borderRadius: 2,
-    '& .MuiToggleButton-root': {
-      color: darkMode ? 'rgba(255,255,255,0.8)' : 'rgba(55,65,81,1)',
-      fontWeight: 600,
-      fontSize: '0.95rem',
-      px: 2.5,
-      py: 1,
-      '&.Mui-selected': {
-        backgroundColor: darkMode ? 'rgba(0, 120, 212, 0.3)' : 'rgba(0, 120, 212, 0.12)',
-        color: darkMode ? '#fff' : '#00539b',
-      },
-    },
-  }}
->
-  <ToggleButton value="Instagram" aria-label="Instagram">Instagram</ToggleButton>
-  <ToggleButton value="TikTok" aria-label="TikTok">TikTok</ToggleButton>
-</ToggleButtonGroup>
+              
 
               {/* Month Selector */}
               <FormControl variant="outlined" size="small" className="min-w-[150px]" sx={{
@@ -949,6 +923,33 @@ const DashboardOverview: React.FC = () => {
                   ))}
                 </Select>
               </FormControl>
+              <ToggleButtonGroup
+  value={activePlatform}
+  exclusive
+  onChange={(_, newPlatform) => {
+    if (newPlatform) setActivePlatform(newPlatform);
+  }}
+  size="small"
+  aria-label="Platform"
+  sx={{
+    backgroundColor: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)',
+    borderRadius: 2,
+    '& .MuiToggleButton-root': {
+      color: darkMode ? 'rgba(255,255,255,0.8)' : 'rgba(55,65,81,1)',
+      fontWeight: 600,
+      fontSize: '0.95rem',
+      px: 2.5,
+      py: 1,
+      '&.Mui-selected': {
+        backgroundColor: darkMode ? 'rgba(0, 120, 212, 0.3)' : 'rgba(0, 120, 212, 0.12)',
+        color: darkMode ? '#fff' : '#00539b',
+      },
+    },
+  }}
+>
+  <ToggleButton value="Instagram" aria-label="Instagram">Instagram</ToggleButton>
+  <ToggleButton value="TikTok" aria-label="TikTok">TikTok</ToggleButton>
+</ToggleButtonGroup>
             </div>
           </div>
           
@@ -1136,7 +1137,7 @@ const DashboardOverview: React.FC = () => {
                   variants={cardVariants}
                   initial="hidden"
                   animate="visible"
-                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 col-span-1 md:col-span-2"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 col-span-1 md:col-span-4"
                 >
                   {filterOptions.platform === 'Instagram' && (
                   <EngagementSection 
@@ -1383,7 +1384,7 @@ const DashboardOverview: React.FC = () => {
                   variants={cardVariants}
                   initial="hidden"
                   animate="visible"
-                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 col-span-1 md:col-span-2"
                 >
                   
                   
