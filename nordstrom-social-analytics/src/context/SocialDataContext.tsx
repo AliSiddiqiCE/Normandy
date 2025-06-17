@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { SocialData, Brand, Platform, FilterOptions, InstagramData, TikTokData, InstagramPost, TikTokPost } from '../types';
 import { fetchInstagramDataFromFile, fetchTikTokDataFromFile } from '../utils/excelUtils';
 import { recalculateAllSentiment } from '../utils/recalculateSentiment';
@@ -23,11 +23,19 @@ interface SocialDataContextType {
   socialData: SocialData;
   isLoading: boolean;
   error: Error | null;
-  filterOptions: FilterOptions;
-  setFilterOptions: (options: FilterOptions) => void;
+  // Global filters (with aliases for backward compatibility)
+  globalFilterOptions: FilterOptions;
+  filterOptions: FilterOptions; // Alias for globalFilterOptions
+  setGlobalFilterOptions: (options: FilterOptions) => void;
+  setFilterOptions: (options: FilterOptions) => void; // Alias for setGlobalFilterOptions
+  // Local filters
+  getLocalFilterOptions: (componentId: string) => FilterOptions;
+  setLocalFilterOptions: (componentId: string, options: Partial<FilterOptions>) => void;
+  // Data methods
   refreshData: (platform?: Platform, brand?: Brand) => Promise<void>;
   selectedBrands: Brand[];
   setSelectedBrands: (brands: Brand[]) => void;
+  // UI state
   darkMode: boolean;
   toggleDarkMode: () => void;
 }
@@ -73,9 +81,32 @@ export const SocialDataProvider: React.FC<{ children: ReactNode }> = ({ children
   const [socialData, setSocialData] = useState<SocialData>(initialSocialData);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [filterOptions, setFilterOptions] = useState<FilterOptions>(initialFilterOptions);
+  
+  // Global filter state
+  const [globalFilterOptions, setGlobalFilterOptions] = useState<FilterOptions>(initialFilterOptions);
+  
+  // Local filter states - stores overrides for specific components
+  const [localFilterOverrides, setLocalFilterOverrides] = useState<Record<string, Partial<FilterOptions>>>({});
+  
   const [selectedBrands, setSelectedBrands] = useState<Brand[]>(ALL_BRANDS);
   const [darkMode, setDarkMode] = useState<boolean>(false);
+  
+  // Get filter options for a specific component, falling back to global options
+  const getLocalFilterOptions = (componentId: string): FilterOptions => ({
+    ...globalFilterOptions,
+    ...(localFilterOverrides[componentId] || {})
+  });
+  
+  // Update local filter options for a specific component
+  const setLocalFilterOptions = (componentId: string, options: Partial<FilterOptions>) => {
+    setLocalFilterOverrides(prev => ({
+      ...prev,
+      [componentId]: {
+        ...(prev[componentId] || {}),
+        ...options
+      }
+    }));
+  };
 
   // Initialize dark mode from localStorage or system preference
   useEffect(() => {
@@ -128,9 +159,7 @@ export const SocialDataProvider: React.FC<{ children: ReactNode }> = ({ children
   };
   
   // Utility function to filter data based on filter options
-  const filterData = () => {
-
-    
+  const filterData = (options: FilterOptions) => {
     // Create a deep copy of the original data (un-filtered)
     const loadedData: SocialData = JSON.parse(JSON.stringify(socialData));
     
@@ -142,19 +171,24 @@ export const SocialDataProvider: React.FC<{ children: ReactNode }> = ({ children
     };
     
     // Always populate both platforms for selected brands initially
-    // The actual display in components will then use filterOptions.platform to show relevant data.
-    filterOptions.brands.forEach(brand => {
-      if (loadedData.instagram[brand]) {
-        filteredData.instagram[brand] = JSON.parse(JSON.stringify(loadedData.instagram[brand]));
-      } else {
-        filteredData.instagram[brand] = null;
-      }
-      if (loadedData.tiktok[brand]) {
-        filteredData.tiktok[brand] = JSON.parse(JSON.stringify(loadedData.tiktok[brand]));
-      } else {
-        filteredData.tiktok[brand] = null;
-      }
-    });
+    // Filter out brands that don't have any posts for the selected platform
+    if (options.platform === 'Instagram' || options.platform === 'All') {
+      Object.keys(filteredData.instagram).forEach((brand: string) => {
+        const brandKey = brand as Brand;
+        if (!filteredData.instagram[brandKey]?.posts?.length) {
+          delete filteredData.instagram[brandKey];
+        }
+      });
+    }
+    
+    if (options.platform === 'TikTok' || options.platform === 'All') {
+      Object.keys(filteredData.tiktok).forEach((brand: string) => {
+        const brandKey = brand as Brand;
+        if (!filteredData.tiktok[brandKey]?.posts?.length) {
+          delete filteredData.tiktok[brandKey];
+        }
+      });
+    }
 
     // Now filter by months for each platform
     const monthMap: Record<string, number> = {
@@ -163,29 +197,30 @@ export const SocialDataProvider: React.FC<{ children: ReactNode }> = ({ children
     };
     
     // Filter Instagram posts by month
-    for (const brand of filterOptions.brands) {
+    for (const brand of options.brands) {
       const brandData = filteredData.instagram[brand];
-      if (brandData && brandData.posts && brandData.posts.length > 0) {
+      if (brandData?.posts?.length) {
         // Filter posts by selected months and date range
         const filteredPosts = brandData.posts.filter((post: InstagramPost) => {
           if (!post.timestamp) return false;
           
           try {
+            if (!post.timestamp) return false;
             const date = new Date(post.timestamp);
             if (isNaN(date.getTime())) return false;
             
             // Check if the post date is within the date range
-            const isInDateRange = (!filterOptions.dateRange.start || date >= filterOptions.dateRange.start) && 
-                                (!filterOptions.dateRange.end || date <= filterOptions.dateRange.end);
+            const isInDateRange = (!options.dateRange.start || date >= options.dateRange.start) && 
+                                (!options.dateRange.end || date <= options.dateRange.end);
             
             // Check if the post month matches the selected month or is part of "All (Feb-May)"
             const monthNum = date.getMonth();
             const monthName = Object.keys(monthMap).find(m => monthMap[m] === monthNum);
             
             // If "All (Feb-May)" is selected, include all posts from Feb-May
-            const isSelectedMonth = filterOptions.selectedMonth === 'All (Feb-May)' ? 
+            const isSelectedMonth = options.selectedMonth === 'All (Feb-May)' ? 
               (monthNum >= 1 && monthNum <= 4) : // Feb (1) to May (4)
-              monthName === filterOptions.selectedMonth;
+              monthName === options.selectedMonth;
             
             // Post must be both in date range AND match the month filter
             return isInDateRange && isSelectedMonth;
@@ -207,22 +242,10 @@ export const SocialDataProvider: React.FC<{ children: ReactNode }> = ({ children
     }
     
     // Filter TikTok posts by month
-    for (const brand of filterOptions.brands) {
-      const brandData = filteredData.tiktok[brand]; // Data for the current brand before date/month filtering
-
-      if (brandData && brandData.posts && brandData.posts.length > 0) {
-        // Diagnostic Log 1: Before date/month filtering
-        console.log(
-          `[DEBUG TIKTOK PRE-FILTER - ${brand}]`,
-          {
-            platformFilter: filterOptions.platform,
-            monthFilter: filterOptions.selectedMonth,
-            dateRangeFilter: filterOptions.dateRange,
-            numPostsBeforeDateFilter: brandData.posts.length,
-            sampleCreateTimes: brandData.posts.slice(0, 3).map(p => p.createTime)
-          }
-        );
-
+    for (const brand of options.brands) {
+      const brandData = filteredData.tiktok[brand];
+      if (brandData?.posts?.length) {
+        // Filter posts by selected months and date range
         const filteredPosts = brandData.posts.filter((post: TikTokPost) => {
           if (!post.createTime) return false;
           
@@ -231,17 +254,17 @@ export const SocialDataProvider: React.FC<{ children: ReactNode }> = ({ children
             if (isNaN(date.getTime())) return false;
             
             // Check if the post date is within the date range
-            const isInDateRange = (!filterOptions.dateRange.start || date >= filterOptions.dateRange.start) && 
-                                (!filterOptions.dateRange.end || date <= filterOptions.dateRange.end);
+            const isInDateRange = (!options.dateRange.start || date >= options.dateRange.start) && 
+                                (!options.dateRange.end || date <= options.dateRange.end);
             
             // Check if the post month matches the selected month or is part of "All (Feb-May)"
             const monthNum = date.getMonth();
             const monthName = Object.keys(monthMap).find(m => monthMap[m] === monthNum);
             
             // If "All (Feb-May)" is selected, include all posts from Feb-May
-            const isSelectedMonth = filterOptions.selectedMonth === 'All (Feb-May)' ? 
+            const isSelectedMonth = options.selectedMonth === 'All (Feb-May)' ? 
               (monthNum >= 1 && monthNum <= 4) : // Feb (1) to May (4)
-              monthName === filterOptions.selectedMonth;
+              monthName === options.selectedMonth;
             
             // Post must be both in date range AND match the month filter
             return isInDateRange && isSelectedMonth;
@@ -276,51 +299,7 @@ export const SocialDataProvider: React.FC<{ children: ReactNode }> = ({ children
     return filteredData;
   };
   
-  // Function to sync date range with selected month
-  const syncDateRangeWithMonth = (month: string) => {
-    const currentYear = new Date().getFullYear();
-    let start: Date, end: Date;
-    
-    if (month === 'All (Feb-May)') {
-      // Set date range to Feb 1 - May 31
-      start = new Date(currentYear, 1, 1); // Feb 1
-      end = new Date(currentYear, 4, 31); // May 31
-    } else {
-      // Set date range to the specific month
-      const monthMap: Record<string, number> = {
-        'January': 0, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'June': 5,
-        'July': 6, 'August': 7, 'September': 8, 'October': 9, 'November': 10, 'December': 11
-      };
-      
-      const monthNum = monthMap[month];
-      if (monthNum !== undefined) {
-        start = new Date(currentYear, monthNum, 1); // First day of month
-        end = new Date(currentYear, monthNum + 1, 0); // Last day of month
-      } else {
-        // Default to last 3 months if month is not recognized
-        start = new Date(new Date().setMonth(new Date().getMonth() - 3));
-        end = new Date();
-      }
-    }
-    
-    // Update filter options with new date range
-    setFilterOptions(prev => {
-      // Only update if the date range is actually different
-      if (
-        prev.dateRange &&
-        prev.dateRange.start &&
-        prev.dateRange.end &&
-        prev.dateRange.start.getTime() === start.getTime() &&
-        prev.dateRange.end.getTime() === end.getTime()
-      ) {
-        return prev;
-      }
-      return {
-        ...prev,
-        dateRange: { start, end }
-      };
-    });
-  };
+
   
   // Function to refresh data for specified platform and brand
   const refreshData = async (platform?: Platform, brand?: Brand) => {
@@ -412,6 +391,39 @@ export const SocialDataProvider: React.FC<{ children: ReactNode }> = ({ children
   // Create a filtered version of the social data based on current filter options
   const [filteredSocialData, setFilteredSocialData] = useState<SocialData>(initialSocialData);
   
+  // Sync date range when selected month changes
+  const syncDateRangeWithMonth = useCallback((month: string) => {
+    const updateDateRange = (startDate: Date, endDate: Date) => {
+      setGlobalFilterOptions((prev: FilterOptions) => ({
+        ...prev,
+        dateRange: {
+          start: startDate,
+          end: endDate
+        },
+        selectedMonth: month
+      }));
+    };
+
+    if (month === 'All (Feb-May)') {
+      updateDateRange(new Date('2023-02-01'), new Date('2023-05-31'));
+      return;
+    }
+    
+    const monthMap: Record<string, number> = {
+      'January': 0, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'June': 5,
+      'July': 6, 'August': 7, 'September': 8, 'October': 9, 'November': 10, 'December': 11
+    };
+    
+    const monthNum = monthMap[month];
+    if (monthNum === undefined) return;
+    
+    const year = 2023; // Assuming 2023 data
+    const start = new Date(year, monthNum, 1);
+    const end = new Date(year, monthNum + 1, 0);
+    
+    updateDateRange(start, end);
+  }, [setGlobalFilterOptions]);
+  
   // Initial data load when component mounts
   const loadInitialData = async () => {
     setIsLoading(true);
@@ -491,23 +503,22 @@ export const SocialDataProvider: React.FC<{ children: ReactNode }> = ({ children
   
   // Effect to sync date range when selected month changes
   useEffect(() => {
-    if (!isLoading && !error && filterOptions.selectedMonth) {
-      syncDateRangeWithMonth(filterOptions.selectedMonth);
+    if (!isLoading && !error && globalFilterOptions.selectedMonth) {
+      syncDateRangeWithMonth(globalFilterOptions.selectedMonth);
     }
-  }, [filterOptions.selectedMonth, isLoading, error, syncDateRangeWithMonth, setFilterOptions]);
+  }, [globalFilterOptions.selectedMonth, isLoading, error, syncDateRangeWithMonth]);
   
   // Effect to apply filters when relevant dependencies change
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (isLoading || error) return;
     
-    const filtered = filterData();
+    const filtered = filterData(globalFilterOptions);
     setFilteredSocialData(filtered);
   }, [
-    filterOptions.platform, 
-    filterOptions.brands, 
-    filterOptions.dateRange,
-    filterOptions.selectedMonth, // Added selectedMonth
+    globalFilterOptions.platform, 
+    globalFilterOptions.brands, 
+    globalFilterOptions.dateRange,
+    globalFilterOptions.selectedMonth,
     socialData, 
     isLoading, 
     error
@@ -515,22 +526,29 @@ export const SocialDataProvider: React.FC<{ children: ReactNode }> = ({ children
 
   // Provide the context value with filtered data
   const value = {
-    socialData: filteredSocialData, // Use filtered data here instead of raw data
+    socialData,
     isLoading,
     error,
-    filterOptions,
-    setFilterOptions,
+    // Global filters
+    globalFilterOptions,
+    filterOptions: globalFilterOptions, // Alias for backward compatibility
+    setGlobalFilterOptions,
+    setFilterOptions: setGlobalFilterOptions, // Alias for backward compatibility
+    // Local filters
+    getLocalFilterOptions,
+    setLocalFilterOptions,
+    // Data methods
     refreshData,
     selectedBrands,
     setSelectedBrands,
+    // UI state
     darkMode,
-    toggleDarkMode
+    toggleDarkMode,
   };
 
   return <SocialDataContext.Provider value={value}>{children}</SocialDataContext.Provider>;
 }
 
-// Hook to use the social data context
 export const useSocialData = () => {
   const context = useContext(SocialDataContext);
   if (context === undefined) {
