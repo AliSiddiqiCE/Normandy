@@ -492,24 +492,43 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ selectedBrands, p
     // Root div styling is removed as it will be handled by the parent in DashboardOverview.tsx
     <div>
       {/* Local platform toggle for Sentiment Analysis */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-2 md:gap-0">
         <h3 className="text-lg font-semibold">Sentiment Analysis</h3>
-        <ToggleButtonGroup
-          value={localPlatform}
-          exclusive
-          onChange={(_event: React.MouseEvent<HTMLElement>, newPlatform: 'Instagram' | 'TikTok' | null) => {
-            if (newPlatform) setLocalPlatform(newPlatform);
-          }}
-          size="small"
-          aria-label="Platform"
-        >
-          <ToggleButton value="Instagram" aria-label="Instagram">
-            Instagram
-          </ToggleButton>
-          <ToggleButton value="TikTok" aria-label="TikTok">
-            TikTok
-          </ToggleButton>
-        </ToggleButtonGroup>
+        <div className="flex items-center gap-4">
+          <FormControl size="small" variant="outlined">
+            <InputLabel id="sentiment-month-label">Month</InputLabel>
+            <Select
+              labelId="sentiment-month-label"
+              id="sentiment-month-select"
+              value={selectedMonth}
+              label="Month"
+              onChange={(e: SelectChangeEvent<string>) => onMonthChange(e.target.value)}
+              style={{ minWidth: 120 }}
+            >
+              <MenuItem value="All (Feb-May)">All</MenuItem>
+              <MenuItem value="February">February</MenuItem>
+              <MenuItem value="March">March</MenuItem>
+              <MenuItem value="April">April</MenuItem>
+              <MenuItem value="May">May</MenuItem>
+            </Select>
+          </FormControl>
+          <ToggleButtonGroup
+            value={localPlatform}
+            exclusive
+            onChange={(_event: React.MouseEvent<HTMLElement>, newPlatform: 'Instagram' | 'TikTok' | null) => {
+              if (newPlatform) setLocalPlatform(newPlatform);
+            }}
+            size="small"
+            aria-label="Platform"
+          >
+            <ToggleButton value="Instagram" aria-label="Instagram">
+              Instagram
+            </ToggleButton>
+            <ToggleButton value="TikTok" aria-label="TikTok">
+              TikTok
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </div>
       </div>
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
         Sentiment analysis of {localPlatform} posts for selected brands based on post text/captions.
