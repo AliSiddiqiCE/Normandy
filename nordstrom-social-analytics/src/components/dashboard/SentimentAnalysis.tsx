@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useSocialData } from '../../context/SocialDataContext';
 import { Bar, Line, Pie, Chart } from 'react-chartjs-2';
 import { 
   Chart as ChartJS, 
@@ -50,6 +51,7 @@ interface SentimentAnalysisProps {
 } 
 
 const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ selectedBrands, posts }) => {
+  const { darkMode } = useSocialData();
   // Local month state for sentiment analysis
   const [selectedMonth, setSelectedMonth] = useState<string>('All (Feb-May)');
   // Local platform state for sentiment analysis
@@ -506,7 +508,7 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ selectedBrands, p
 
   if (!hasData && !checkAndFixTikTokData) {
     return (
-      <div className="mt-8 p-4 bg-white rounded-lg shadow-md">
+      <div className={`mt-8 p-4 rounded-lg shadow-md ${darkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
         <h2 className="text-xl font-bold mb-4">Sentiment Analysis</h2>
         <EmptyChartFallback message={`No ${localPlatform} data available for sentiment analysis`} />
       </div>
@@ -515,18 +517,45 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ selectedBrands, p
 
   return (
     // Root div styling is removed as it will be handled by the parent in DashboardOverview.tsx
-    <div>
+    <div className={darkMode ? 'text-white' : ''}>
       {/* Local platform toggle for Sentiment Analysis */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-2 md:gap-0">
         <h3 className="text-lg font-semibold">Sentiment Analysis</h3>
         <div className="flex items-center gap-4">
-          <FormControl size="small" variant="outlined">
-            <InputLabel id="sentiment-month-label">Month</InputLabel>
+          <FormControl variant="outlined" size="small" className="min-w-[150px]" sx={{
+                          '& .MuiInputLabel-root': {
+                            color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
+                          },
+                          '& .MuiOutlinedInput-root': {
+                            color: darkMode ? 'white' : undefined,
+                            '& fieldset': {
+                              borderColor: darkMode ? 'rgba(255, 255, 255, 0.23)' : undefined
+                            },
+                            '&:hover fieldset': {
+                              borderColor: darkMode ? 'rgba(255, 255, 255, 0.5)' : undefined
+                            }
+                          },
+                          '& .MuiSelect-icon': {
+                            color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
+                          }
+                        }}>
+            <InputLabel id="sentiment-month-label">Date</InputLabel>
             <Select
               labelId="sentiment-month-label"
               id="sentiment-month-select"
               value={selectedMonth}
-              label="Month"
+              label="Date"
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    bgcolor: darkMode ? 'rgb(45, 45, 45)' : undefined,
+                    color: darkMode ? 'white' : undefined,
+                    '& .MuiMenuItem-root:hover': {
+                      bgcolor: darkMode ? 'rgba(255, 255, 255, 0.08)' : undefined
+                    }
+                  }
+                }
+              }}
               onChange={(e: SelectChangeEvent<string>) => setSelectedMonth(e.target.value)}
               style={{ minWidth: 120 }}
             >
@@ -545,6 +574,21 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ selectedBrands, p
             }}
             size="small"
             aria-label="Platform"
+            sx={{
+              backgroundColor: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)',
+              borderRadius: 2,
+              '& .MuiToggleButton-root': {
+                color: darkMode ? 'rgba(255,255,255,0.8)' : 'rgba(55,65,81,1)',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                px: 2.5,
+                py: 1,
+                '&.Mui-selected': {
+                  backgroundColor: darkMode ? 'rgba(0, 120, 212, 0.3)' : 'rgba(0, 120, 212, 0.12)',
+                  color: darkMode ? '#fff' : '#00539b',
+                },
+              },
+            }}
           >
             <ToggleButton value="Instagram" aria-label="Instagram">
               Instagram
