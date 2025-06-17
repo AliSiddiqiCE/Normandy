@@ -1131,8 +1131,29 @@ const DashboardOverview: React.FC = () => {
                     />
                   </div>
                 </motion.div>
+                <motion.div
+                  custom={3}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  {filterOptions.platform === 'Instagram' && (
+                  <EngagementSection 
+                    platform="Instagram" 
+                    selectedBrands={selectedBrands} 
+                    posts={selectedBrands.reduce((acc, brand) => {
+                      acc[brand] = socialData.instagram[brand]?.posts || [];
+                      return acc;
+                    }, {} as Record<Brand, InstagramPost[] | TikTokPost[]>)}
+                  />
+                )}
+                </motion.div>
+              
               </>
             )}
+
+
 
             {/* TikTok KPIs */}
             {(filterOptions.platform === 'TikTok' || filterOptions.platform === 'All') && (
@@ -1356,40 +1377,17 @@ const DashboardOverview: React.FC = () => {
                     />
                   </div>
                 </motion.div>
-              </>
-            )}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Engagement Section */}
-      <div className="mt-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className={`rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg p-6`} /* Updated styling */
-        >
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold text-nordstrom-blue">
-              <AiIcons.AiOutlineInteraction className="inline-block mr-2 text-nordstrom-blue" />
-              Engagement Analytics
-            </h2>
-          </div>
-          
-          {/* Instagram Engagement Analytics */}
-          {filterOptions.platform === 'Instagram' && (
-            <EngagementSection 
-              platform="Instagram" 
-              selectedBrands={selectedBrands} 
-              posts={selectedBrands.reduce((acc, brand) => {
-                acc[brand] = socialData.instagram[brand]?.posts || [];
-                return acc;
-              }, {} as Record<Brand, InstagramPost[] | TikTokPost[]>)}
-            />
-          )}
-          
-          {/* TikTok Engagement Analytics */}
+                 {/* Engagement Rate */}
+                 <motion.div
+                  custom={7}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  
+                  
+                  {/* TikTok Engagement Analytics */}
           {filterOptions.platform === 'TikTok' && (
             <EngagementSection 
               platform="TikTok" 
@@ -1400,8 +1398,15 @@ const DashboardOverview: React.FC = () => {
               }, {} as Record<Brand, InstagramPost[] | TikTokPost[]>)}
             />
           )}
+                </motion.div>
+                
+              </>
+            )}
+          </div>
         </motion.div>
       </div>
+
+     
       
       {/* Sentiment Analysis Section */}
       <div className="mt-8">
