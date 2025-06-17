@@ -241,7 +241,7 @@ const HashtagSection: React.FC<HashtagSectionProps> = ({
         {/* Nordstrom Top Hashtags */}
         <div className={`p-4 rounded-lg shadow ${darkMode ? 'bg-gray-800/50' : 'bg-white'}`}> {/* Updated inner card style */}
           <h3 className={`text-md font-semibold mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Nordstrom Top Hashtags</h3> {/* Updated title style */}
-          <div className="h-80 overflow-auto">
+          <div className="h-80 overflow-auto mt-7">
   {!hasData || !nordstromHashtagsData.labels.length ? (
     <EmptyChartFallback message="No hashtag data available" />
   ) : (
@@ -254,12 +254,46 @@ const HashtagSection: React.FC<HashtagSectionProps> = ({
           </TableRow>
         </TableHead>
         <TableBody>
-          {extractHashtags(mainBrand).map(([tag, count]) => (
-            <TableRow key={tag}>
-              <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>#{tag}</TableCell>
-              <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>{count}</TableCell>
-            </TableRow>
-          ))}
+          {(() => {
+            // Calculate all hashtag counts for the brand (not just top 5)
+            const brandPosts = posts[mainBrand] || [];
+            const hashtagCounts: Record<string, number> = {};
+            brandPosts.forEach(post => {
+              if (platform === 'Instagram') {
+                const instagramPost = post as InstagramPost;
+                if (instagramPost.hashtags && instagramPost.hashtags.length) {
+                  instagramPost.hashtags.forEach(tag => {
+                    if (tag) {
+                      hashtagCounts[tag.toLowerCase()] = (hashtagCounts[tag.toLowerCase()] || 0) + 1;
+                    }
+                  });
+                }
+              } else {
+                const tiktokPost = post as TikTokPost;
+                if (tiktokPost.hashtags && tiktokPost.hashtags.length) {
+                  tiktokPost.hashtags.forEach(tag => {
+                    if (tag.name) {
+                      hashtagCounts[tag.name.toLowerCase()] = (hashtagCounts[tag.name.toLowerCase()] || 0) + 1;
+                    }
+                  });
+                }
+              }
+            });
+            const totalMentions = Object.values(hashtagCounts).reduce((sum, count) => sum + count, 0);
+            const tags = extractHashtags(mainBrand);
+            return [
+              <TableRow key="total-mentions" sx={{ backgroundColor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}>
+                <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>Total Mentions</TableCell>
+                <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>{totalMentions}</TableCell>
+              </TableRow>,
+              ...tags.map(([tag, count]) => (
+                <TableRow key={tag}>
+                  <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>#{tag}</TableCell>
+                  <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>{count}</TableCell>
+                </TableRow>
+              ))
+            ];
+          })()}
         </TableBody>
       </Table>
     </TableContainer>
@@ -329,12 +363,46 @@ const HashtagSection: React.FC<HashtagSectionProps> = ({
           </TableRow>
         </TableHead>
         <TableBody>
-          {extractHashtags(selectedCompetitor).map(([tag, count]) => (
-            <TableRow key={tag}>
-              <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>#{tag}</TableCell>
-              <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>{count}</TableCell>
-            </TableRow>
-          ))}
+          {(() => {
+            // Calculate all hashtag counts for the competitor (not just top 5)
+            const brandPosts = posts[selectedCompetitor] || [];
+            const hashtagCounts: Record<string, number> = {};
+            brandPosts.forEach(post => {
+              if (platform === 'Instagram') {
+                const instagramPost = post as InstagramPost;
+                if (instagramPost.hashtags && instagramPost.hashtags.length) {
+                  instagramPost.hashtags.forEach(tag => {
+                    if (tag) {
+                      hashtagCounts[tag.toLowerCase()] = (hashtagCounts[tag.toLowerCase()] || 0) + 1;
+                    }
+                  });
+                }
+              } else {
+                const tiktokPost = post as TikTokPost;
+                if (tiktokPost.hashtags && tiktokPost.hashtags.length) {
+                  tiktokPost.hashtags.forEach(tag => {
+                    if (tag.name) {
+                      hashtagCounts[tag.name.toLowerCase()] = (hashtagCounts[tag.name.toLowerCase()] || 0) + 1;
+                    }
+                  });
+                }
+              }
+            });
+            const totalMentions = Object.values(hashtagCounts).reduce((sum, count) => sum + count, 0);
+            const tags = extractHashtags(selectedCompetitor);
+            return [
+              <TableRow key="total-mentions" sx={{ backgroundColor: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}>
+                <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>Total Mentions</TableCell>
+                <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>{totalMentions}</TableCell>
+              </TableRow>,
+              ...tags.map(([tag, count]) => (
+                <TableRow key={tag}>
+                  <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>#{tag}</TableCell>
+                  <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>{count}</TableCell>
+                </TableRow>
+              ))
+            ];
+          })()}
         </TableBody>
       </Table>
     </TableContainer>
