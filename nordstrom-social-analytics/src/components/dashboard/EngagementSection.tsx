@@ -377,49 +377,41 @@ const EngagementSection: React.FC<EngagementSectionProps> = ({
   return (
     // Removed p-4 from root, padding is handled by parent card in DashboardOverview
     <div>
-      {/* Competitor selection dropdown removed */}
-      
-      <div className="grid grid-cols-1 gap-6">
-        {/* Instagram Image Engagement Chart */}
-        {platform === 'Instagram' && (
-          <div className={`p-4 rounded-lg shadow ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'} w-full`}>
+      {/* Engagement analytics bubble and label removed. Keeping only the charts and their containers. */}
+
+      {platform === 'Instagram' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+          {/* Instagram Image Engagement Chart */}
+          <div className={`p-4 rounded-lg shadow border-2 border-red-500 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'} w-full`}>
             <h3 className={`text-md font-semibold mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-              Instagram Image Engagement
+              Instagram Image Engagement Rate
             </h3>
             <div className="h-80">
               {!hasData || instagramImageEngagementData.labels.length === 0 ? (
                 <EmptyChartFallback message="No image post data available" />
               ) : (
                 <Bar 
-  data={{
-    ...instagramImageEngagementData,
-    datasets: instagramImageEngagementData.datasets.map(ds => ({
-      ...ds,
-      backgroundColor: 'rgba(255, 140, 0, 0.85)'
-    }))
-  }}
-  options={commonChartOptions as ChartOptions<'bar'>}
-/>
+                  data={{
+                    ...instagramImageEngagementData,
+                    datasets: instagramImageEngagementData.datasets.map(ds => ({
+                      ...ds,
+                      backgroundColor: 'rgba(255, 140, 0, 0.85)'
+                    }))
+                  }}
+                  options={commonChartOptions as ChartOptions<'bar'>}
+                />
               )}
             </div>
           </div>
-        )}
-        
-        {/* Video Engagement Chart (Instagram or TikTok) */}
-        <div className={`p-4 rounded-lg shadow ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'} w-full`}>
-          <h3 className={`text-md font-semibold mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
-            {platform === 'Instagram'
-              ? 'Instagram Video Engagement Rate'
-              // Updated title logic for TikTok
-              : (filterOptions && filterOptions.selectedMonth && filterOptions.selectedMonth.toLowerCase().includes('all'))
-                ? 'TikTok Overall Engagement Rate by Brand' // Changed from "Average"
-                : `TikTok Engagement Rate by Brand - ${filterOptions?.selectedMonth || ''}`}
-          </h3>
-          <div className="h-80">
-            {!hasData || videoEngagementData.labels.length === 0 ? (
-              <EmptyChartFallback message={`No ${platform === 'Instagram' ? 'video post' : 'TikTok'} data available`} />
-            ) : (
-              platform === 'Instagram' ? (
+          {/* Instagram Video Engagement Chart */}
+          <div className={`p-4 rounded-lg shadow ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'} w-full`}>
+            <h3 className={`text-md font-semibold mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+              Instagram Video Engagement Rate
+            </h3>
+            <div className="h-80">
+              {!hasData || videoEngagementData.labels.length === 0 ? (
+                <EmptyChartFallback message="No video post data available" />
+              ) : (
                 <Bar 
                   data={{
                     ...videoEngagementData,
@@ -430,15 +422,29 @@ const EngagementSection: React.FC<EngagementSectionProps> = ({
                   }}
                   options={commonChartOptions as ChartOptions<'bar'>}
                 />
-              ) : (
-                <Bar data={videoEngagementData as ChartData<'bar'>} options={commonChartOptions as ChartOptions<'bar'>} />
-              )
-            )}
+              )}
+            </div>
           </div>
         </div>
-        
-        {/* Engagement Distribution Pie Chart Removed */}
-      </div>
+      ) : (
+        // TikTok: single column layout
+        <div className="grid grid-cols-1 gap-6">
+          <div className={`p-4 rounded-lg shadow ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'} w-full`}>
+            <h3 className={`text-md font-semibold mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+              {(filterOptions && filterOptions.selectedMonth && filterOptions.selectedMonth.toLowerCase().includes('all'))
+                ? 'TikTok Overall Engagement Rate by Brand'
+                : `TikTok Engagement Rate by Brand - ${filterOptions?.selectedMonth || ''}`}
+            </h3>
+            <div className="h-80">
+              {!hasData || videoEngagementData.labels.length === 0 ? (
+                <EmptyChartFallback message="No TikTok data available" />
+              ) : (
+                <Bar data={videoEngagementData as ChartData<'bar'>} options={commonChartOptions as ChartOptions<'bar'>} />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
