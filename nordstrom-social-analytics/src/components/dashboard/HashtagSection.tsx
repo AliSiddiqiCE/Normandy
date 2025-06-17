@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Bar } from 'react-chartjs-2';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import { 
   Chart as ChartJS, 
   CategoryScale, 
@@ -241,13 +241,30 @@ const HashtagSection: React.FC<HashtagSectionProps> = ({
         {/* Nordstrom Top Hashtags */}
         <div className={`p-4 rounded-lg shadow ${darkMode ? 'bg-gray-800/50' : 'bg-white'}`}> {/* Updated inner card style */}
           <h3 className={`text-md font-semibold mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Nordstrom Top Hashtags</h3> {/* Updated title style */}
-          <div className="h-80">
-            {!hasData || !nordstromHashtagsData.labels.length ? (
-              <EmptyChartFallback message="No hashtag data available" />
-            ) : (
-              <Bar data={nordstromHashtagsData} options={chartOptions} />
-            )}
-          </div>
+          <div className="h-80 overflow-auto">
+  {!hasData || !nordstromHashtagsData.labels.length ? (
+    <EmptyChartFallback message="No hashtag data available" />
+  ) : (
+    <TableContainer component={Paper} sx={{ bgcolor: darkMode ? 'rgb(31, 41, 55)' : 'white' }}>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ color: darkMode ? 'white' : 'black', fontWeight: 600 }}>Hashtag</TableCell>
+            <TableCell sx={{ color: darkMode ? 'white' : 'black', fontWeight: 600 }}>Count</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {extractHashtags(mainBrand).map(([tag, count]) => (
+            <TableRow key={tag}>
+              <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>#{tag}</TableCell>
+              <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>{count}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  )}
+</div>
         </div>
 
         {/* Competitor Top Hashtags */}
@@ -299,13 +316,30 @@ const HashtagSection: React.FC<HashtagSectionProps> = ({
               </Select>
             </FormControl>
           </div>
-          <div className="h-80">
-            {!hasData || !competitorHashtagsData.labels.length ? (
-              <EmptyChartFallback message="No hashtag data available" />
-            ) : (
-              <Bar data={competitorHashtagsData} options={chartOptions} />
-            )}
-          </div>
+          <div className="h-80 overflow-auto">
+  {!hasData || !competitorHashtagsData.labels.length ? (
+    <EmptyChartFallback message="No hashtag data available" />
+  ) : (
+    <TableContainer component={Paper} sx={{ bgcolor: darkMode ? 'rgb(31, 41, 55)' : 'white' }}>
+      <Table size="small">
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ color: darkMode ? 'white' : 'black', fontWeight: 600 }}>Hashtag</TableCell>
+            <TableCell sx={{ color: darkMode ? 'white' : 'black', fontWeight: 600 }}>Count</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {extractHashtags(selectedCompetitor).map(([tag, count]) => (
+            <TableRow key={tag}>
+              <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>#{tag}</TableCell>
+              <TableCell sx={{ color: darkMode ? 'white' : 'black' }}>{count}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  )}
+</div>
         </div>
       </div>
     </div>
