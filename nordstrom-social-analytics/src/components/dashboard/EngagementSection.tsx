@@ -46,16 +46,69 @@ const EngagementSection: React.FC<EngagementSectionProps> = ({
   selectedBrands, 
   posts 
 }) => {
-  // Get dark mode and filterOptions from context
-  const { darkMode = false, filterOptions } = useSocialData() || {};
+  // Get dark mode and filter methods from context
+  const { 
+    darkMode = false, 
+    getLocalFilterOptions,
+    setLocalFilterOptions 
+  } = useSocialData() || {};
   
-  // Removed local vibrantColors array, will use generateColors or getColorByBrand from chartUtils
+  // Get local filter options for this component
+  const componentId = `engagement-section-${platform.toLowerCase()}`;
+  const filterOptions = getLocalFilterOptions(componentId);
+  
+  // Initialize platform filter if not set
+  React.useEffect(() => {
+    if (!filterOptions.platform) {
+      setLocalFilterOptions(componentId, { platform });
+    }
+  }, [componentId, platform]);
+  
+  // Use generateColors for consistent coloring
+  const brandColors = useMemo(() => {
+    return generateColors(selectedBrands);
+  }, [selectedBrands]);
 
-  // Removed mainBrand and selectedCompetitor state
+  // --- FILTER POSTS BY SELECTED MONTH ---
+  // Helper to check if a post matches the selectedMonth
+  const isInSelectedMonth = (post: InstagramPost | TikTokPost) => {
+    const { selectedMonth } = filterOptions;
+    if (!selectedMonth || selectedMonth.toLowerCase().includes('all')) return true;
+    // Instagram: timestamp, TikTok: createTime
+    let dateStr = (platform === 'Instagram') ? (post as InstagramPost).timestamp : (post as TikTokPost).createTime;
+    if (!dateStr) return false;
+    const date = new Date(dateStr);
+    // selectedMonth is like 'February', 'March', etc.
+    const monthName = date.toLocaleString('default', { month: 'long' });
+    return monthName === selectedMonth;
+  };
+
+  // Filtered posts per brand
+  const filteredPosts: Record<Brand, (InstagramPost | TikTokPost)[]> = useMemo(() => {
+    const out: Record<Brand, (InstagramPost | TikTokPost)[]> = {
+      Nordstrom: [],
+      Macys: [],
+      Saks: [],
+      Bloomingdales: [],
+      Tjmaxx: [],
+      Sephora: [],
+      Ulta: [],
+      Aritzia: [],
+      "American Eagle": [],
+      Walmart: [],
+      "Amazon Beauty": [],
+      Revolve: [],
+    };
+
+    selectedBrands.forEach(brand => {
+      out[brand] = (posts[brand] || []).filter(isInSelectedMonth);
+    });
+    return out;
+  }, [posts, selectedBrands, filterOptions.selectedMonth, platform]);
 
   const hasData = useMemo(() => {
-    return selectedBrands.some(brand => (posts[brand]?.length || 0) > 0);
-  }, [selectedBrands, posts]);
+    return selectedBrands.some(brand => (filteredPosts[brand]?.length || 0) > 0);
+  }, [selectedBrands, filteredPosts]);
 
   // Removed handleCompetitorChange
 
@@ -179,13 +232,10 @@ const EngagementSection: React.FC<EngagementSectionProps> = ({
           labels: totalPeriodAggregatedER.map(data => data.brandName),
           datasets: [
             {
-              // Title will be "TikTok Average Engagement Rate by Brand" but this is now an aggregate, not an average of ERs.
-              // Consider renaming the title or this label if distinction is critical.
-              // For now, keeping dataset label simple.
               label: 'Overall Engagement Rate (%)',
               data: totalPeriodAggregatedER.map(data => data.engagementRate),
-              backgroundColor: generateColors(selectedBrands),
-              borderColor: generateColors(selectedBrands),
+              backgroundColor: 'rgba(255, 140, 0, 0.8)',
+              borderColor: 'rgba(255, 140, 0, 1)',
               borderWidth: 1,
             },
           ],
@@ -226,10 +276,10 @@ const EngagementSection: React.FC<EngagementSectionProps> = ({
           labels: monthlyAggregatedER.map(data => data.brandName),
           datasets: [
             {
-              label: `Engagement Rate (%) - ${filterOptions?.selectedMonth || ''}`, // Simplified label
+              label: `Engagement Rate (%) - ${filterOptions?.selectedMonth || ''}`,
               data: monthlyAggregatedER.map(data => data.engagementRate),
-              backgroundColor: generateColors(selectedBrands),
-              borderColor: generateColors(selectedBrands),
+              backgroundColor: 'rgba(255, 140, 0, 0.8)',
+              borderColor: 'rgba(255, 140, 0, 1)',
               borderWidth: 1,
             },
           ],
@@ -340,7 +390,16 @@ const EngagementSection: React.FC<EngagementSectionProps> = ({
               {!hasData || instagramImageEngagementData.labels.length === 0 ? (
                 <EmptyChartFallback message="No image post data available" />
               ) : (
-                <Line data={instagramImageEngagementData as ChartData<'line'>} options={commonChartOptions as ChartOptions<'line'>} />
+                <Bar 
+  data={{
+    ...instagramImageEngagementData,
+    datasets: instagramImageEngagementData.datasets.map(ds => ({
+      ...ds,
+      backgroundColor: 'rgba(255, 140, 0, 0.85)'
+    }))
+  }}
+  options={commonChartOptions as ChartOptions<'bar'>}
+/>
               )}
             </div>
           </div>
@@ -361,7 +420,16 @@ const EngagementSection: React.FC<EngagementSectionProps> = ({
               <EmptyChartFallback message={`No ${platform === 'Instagram' ? 'video post' : 'TikTok'} data available`} />
             ) : (
               platform === 'Instagram' ? (
-                <Line data={videoEngagementData as ChartData<'line'>} options={commonChartOptions as ChartOptions<'line'>} />
+                <Bar 
+                  data={{
+                    ...videoEngagementData,
+                    datasets: videoEngagementData.datasets.map(ds => ({
+                      ...ds,
+                      backgroundColor: 'rgba(255, 140, 0, 0.85)'
+                    }))
+                  }}
+                  options={commonChartOptions as ChartOptions<'bar'>}
+                />
               ) : (
                 <Bar data={videoEngagementData as ChartData<'bar'>} options={commonChartOptions as ChartOptions<'bar'>} />
               )
