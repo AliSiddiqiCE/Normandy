@@ -57,6 +57,12 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ selectedBrands, p
 
   // Compute filtered posts for the selected platform only
   const filteredPosts = useMemo(() => {
+    // Helper to match month
+    const matchesMonth = (date: Date) => {
+      if (selectedMonth === 'All (Feb-May)') return true;
+      const monthName = date.toLocaleString('default', { month: 'long' });
+      return monthName === selectedMonth;
+    };
     // Initialize with all Brand keys for type safety
     const out: Record<Brand, InstagramPost[] | TikTokPost[]> = {
       Nordstrom: [], Macys: [], Saks: [], Bloomingdales: [], Tjmaxx: [], Sephora: [], Ulta: [], Aritzia: [], "American Eagle": [], Walmart: [], "Amazon Beauty": [], Revolve: []
@@ -65,16 +71,35 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ selectedBrands, p
       const brandPosts = posts[brand] || [];
       if (localPlatform === 'Instagram') {
         out[brand] = (brandPosts as (InstagramPost | TikTokPost)[]).filter(
-          (post): post is InstagramPost => (post as InstagramPost).mediaType !== undefined
+          (post): post is InstagramPost => {
+            if ((post as InstagramPost).mediaType === undefined) return false;
+            if (selectedMonth === 'All (Feb-May)') return true;
+            const ts = (post as InstagramPost).timestamp;
+            if (!ts) return false;
+            const date = new Date(ts);
+            return matchesMonth(date);
+          }
         );
       } else {
         out[brand] = (brandPosts as (InstagramPost | TikTokPost)[]).filter(
-          (post): post is TikTokPost => (post as TikTokPost).playCount !== undefined
+          (post): post is TikTokPost => {
+            if ((post as TikTokPost).playCount === undefined) return false;
+            if (selectedMonth === 'All (Feb-May)') return true;
+            const ct = (post as TikTokPost).createTime;
+            if (!ct) return false;
+            let date: Date;
+            if (typeof ct === 'number' || !isNaN(Number(ct))) {
+              date = new Date(Number(ct) * 1000);
+            } else {
+              date = new Date(ct as string);
+            }
+            return matchesMonth(date);
+          }
         );
       }
     });
     return out;
-  }, [selectedBrands, posts, localPlatform]);
+  }, [selectedBrands, posts, localPlatform, selectedMonth]);
   // State for selected brand in charts
   const [selectedBrandForSentiment, setSelectedBrandForSentiment] = useState<string>('all');
   const [selectedBrandForVolume, setSelectedBrandForVolume] = useState<string>('all');
