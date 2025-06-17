@@ -158,6 +158,7 @@ const DashboardOverview: React.FC = () => {
     let totalTikTokViews = 0;
     let totalTikTokLikes = 0;
     let totalTikTokShares = 0;
+    let totalTikTokComments = 0;
     let totalTikTokPosts = 0;
     
     // Competitor metrics
@@ -167,6 +168,7 @@ const DashboardOverview: React.FC = () => {
     let competitorTikTokViews = 0;
     let competitorTikTokLikes = 0;
     let competitorTikTokShares = 0;
+    let competitorTikTokComments = 0;
     let competitorTikTokPosts = 0;
     
     // Track engagement by month for trend analysis
@@ -179,6 +181,7 @@ const DashboardOverview: React.FC = () => {
     let avgTikTokViews = 0;
     let avgTikTokLikes = 0;
     let avgTikTokShares = 0;
+    let avgTikTokComments = 0;
     let tikTokEngagementRate = 0;
     
     // For calculating averages - Competitor
@@ -188,6 +191,7 @@ const DashboardOverview: React.FC = () => {
     let competitorAvgTikTokViews = 0;
     let competitorAvgTikTokLikes = 0;
     let competitorAvgTikTokShares = 0;
+    let competitorAvgTikTokComments = 0;
     let competitorTikTokEngagementRate = 0;
 
     try {
@@ -257,6 +261,7 @@ const DashboardOverview: React.FC = () => {
                   totalTikTokViews += post.playCount || 0;
                   totalTikTokLikes += post.diggCount || 0;
                   totalTikTokShares += post.shareCount || 0;
+                  totalTikTokComments += post.commentCount || 0;
                   totalTikTokPosts++;
                 }
                 // Track monthly engagement (for trend analysis, always track)
@@ -288,6 +293,7 @@ const DashboardOverview: React.FC = () => {
                   competitorTikTokViews += post.playCount || 0;
                   competitorTikTokLikes += post.diggCount || 0;
                   competitorTikTokShares += post.shareCount || 0;
+                  competitorTikTokComments += post.commentCount || 0;
                   competitorTikTokPosts++;
                 }
               }
@@ -323,10 +329,11 @@ const DashboardOverview: React.FC = () => {
     instagramEngagementRate = parseFloat(rawNordstromVideoER.toFixed(1));
     
     if (totalTikTokPosts > 0) {
-      avgTikTokViews = totalTikTokViews / totalTikTokPosts;
-      avgTikTokLikes = totalTikTokLikes / totalTikTokPosts;
-      avgTikTokShares = totalTikTokShares / totalTikTokPosts;
-      tikTokEngagementRate = ((totalTikTokLikes + totalTikTokShares) / totalTikTokPosts) / 100;
+      avgTikTokViews = totalTikTokPosts > 0 ? totalTikTokViews / totalTikTokPosts : 0;
+      avgTikTokLikes = totalTikTokPosts > 0 ? totalTikTokLikes / totalTikTokPosts : 0;
+      avgTikTokShares = totalTikTokPosts > 0 ? totalTikTokShares / totalTikTokPosts : 0;
+      avgTikTokComments = totalTikTokPosts > 0 ? totalTikTokComments / totalTikTokPosts : 0;
+      tikTokEngagementRate = totalTikTokPosts > 0 && totalTikTokViews > 0 ? ((totalTikTokLikes + totalTikTokComments + totalTikTokShares) / totalTikTokViews) * 100 : 0;
     }
     
     // Calculate averages and rates for competitor
@@ -353,10 +360,11 @@ const DashboardOverview: React.FC = () => {
     competitorInstagramEngagementRate = parseFloat(rawCompetitorVideoER.toFixed(1));
     
     if (competitorTikTokPosts > 0) {
-      competitorAvgTikTokViews = competitorTikTokViews / competitorTikTokPosts;
-      competitorAvgTikTokLikes = competitorTikTokLikes / competitorTikTokPosts;
-      competitorAvgTikTokShares = competitorTikTokShares / competitorTikTokPosts;
-      competitorTikTokEngagementRate = ((competitorTikTokLikes + competitorTikTokShares) / competitorTikTokPosts) / 100;
+      competitorAvgTikTokViews = competitorTikTokPosts > 0 ? competitorTikTokViews / competitorTikTokPosts : 0;
+      competitorAvgTikTokLikes = competitorTikTokPosts > 0 ? competitorTikTokLikes / competitorTikTokPosts : 0;
+      competitorAvgTikTokShares = competitorTikTokPosts > 0 ? competitorTikTokShares / competitorTikTokPosts : 0;
+      competitorAvgTikTokComments = competitorTikTokPosts > 0 ? competitorTikTokComments / competitorTikTokPosts : 0;
+      competitorTikTokEngagementRate = competitorTikTokPosts > 0 && competitorTikTokViews > 0 ? ((competitorTikTokLikes + competitorTikTokComments + competitorTikTokShares) / competitorTikTokViews) * 100 : 0;
     }
     
     return {
@@ -367,6 +375,7 @@ const DashboardOverview: React.FC = () => {
       totalTikTokViews,
       totalTikTokLikes,
       totalTikTokShares,
+      totalTikTokComments,
       totalTikTokPosts,
       avgInstagramLikes,
       avgInstagramComments,
@@ -374,6 +383,7 @@ const DashboardOverview: React.FC = () => {
       avgTikTokViews,
       avgTikTokLikes,
       avgTikTokShares,
+      avgTikTokComments,
       tikTokEngagementRate,
       
       // Competitor metrics
@@ -383,6 +393,7 @@ const DashboardOverview: React.FC = () => {
       competitorTikTokViews,
       competitorTikTokLikes,
       competitorTikTokShares,
+      competitorTikTokComments,
       competitorTikTokPosts,
       competitorAvgInstagramLikes,
       competitorAvgInstagramComments,
@@ -390,6 +401,7 @@ const DashboardOverview: React.FC = () => {
       competitorAvgTikTokViews,
       competitorAvgTikTokLikes,
       competitorAvgTikTokShares,
+      competitorAvgTikTokComments,
       competitorTikTokEngagementRate,
       
       // Other metrics
@@ -992,6 +1004,32 @@ const DashboardOverview: React.FC = () => {
                       </div>
                     )}
                   </div>
+                  {/* Posts Comparison Chart */}
+                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                    <Bar
+                      data={{
+                        labels: ['Nordstrom', metrics.selectedCompetitor],
+                        datasets: [{
+                          label: 'Posts',
+                          data: [metrics.totalInstagramPosts, metrics.competitorInstagramPosts],
+                          backgroundColor: [
+                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(156, 163, 175, 0.7)'
+                          ]
+                        }]
+                      }}
+                      options={{
+                        plugins: { legend: { display: false } },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                          x: { ticks: { color: darkMode ? 'white' : 'black' } },
+                          y: { beginAtZero: true, ticks: { color: darkMode ? 'white' : 'black' } }
+                        }
+                      }}
+                      height={180}
+                    />
+                  </div>
                 </motion.div>
                 
                 {/* Total Likes */}
@@ -1029,6 +1067,32 @@ const DashboardOverview: React.FC = () => {
                         </p>
                       </div>
                     )}
+                  </div>
+                  {/* Likes Comparison Chart */}
+                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                    <Bar
+                      data={{
+                        labels: ['Nordstrom', metrics.selectedCompetitor],
+                        datasets: [{
+                          label: 'Likes',
+                          data: [metrics.totalInstagramLikes, metrics.competitorInstagramLikes],
+                          backgroundColor: [
+                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(156, 163, 175, 0.7)'
+                          ]
+                        }]
+                      }}
+                      options={{
+                        plugins: { legend: { display: false } },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                          x: { ticks: { color: darkMode ? 'white' : 'black' } },
+                          y: { beginAtZero: true, ticks: { color: darkMode ? 'white' : 'black' } }
+                        }
+                      }}
+                      height={180}
+                    />
                   </div>
                 </motion.div>
                 
@@ -1068,24 +1132,95 @@ const DashboardOverview: React.FC = () => {
                       </div>
                     )}
                   </div>
+                  {/* Comments Comparison Chart */}
+                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                    <Bar
+                      data={{
+                        labels: ['Nordstrom', metrics.selectedCompetitor],
+                        datasets: [{
+                          label: 'Comments',
+                          data: [metrics.totalInstagramComments, metrics.competitorInstagramComments],
+                          backgroundColor: [
+                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(156, 163, 175, 0.7)'
+                          ]
+                        }]
+                      }}
+                      options={{
+                        plugins: { legend: { display: false } },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                          x: { ticks: { color: darkMode ? 'white' : 'black' } },
+                          y: { beginAtZero: true, ticks: { color: darkMode ? 'white' : 'black' } }
+                        }
+                      }}
+                      height={180}
+                    />
+                  </div>
                 </motion.div>
                 
-                {/* Instagram Engagement Rate */}
-                <InstagramEngagementCard
-                  instagramEngagementRate={metrics.instagramEngagementRate}
-                  competitorInstagramEngagementRate={metrics.competitorInstagramEngagementRate}
-                  selectedCompetitor={metrics.selectedCompetitor}
-                  cardVariants={cardVariants}
-                />
+                {/* Engagement Rate */}
+                <motion.div
+                  custom={3}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Engagement Rate</p>
+                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{metrics.instagramEngagementRate?.toFixed(2)}%</h3>
+                    </div>
+                    <AiIcons.AiOutlineInteraction className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
+                  </div>
+                  <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
+                    <div className="flex justify-between">
+                      <p>Nordstrom</p>
+                      <p className="font-medium">{metrics.instagramEngagementRate?.toFixed(2)}%</p>
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <p>{metrics.selectedCompetitor}</p>
+                      <p className="font-medium">{metrics.competitorInstagramEngagementRate?.toFixed(2)}%</p>
+                    </div>
+                  </div>
+                  {/* Engagement Rate Comparison Chart */}
+                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                    <Bar
+                      data={{
+                        labels: ['Nordstrom', metrics.selectedCompetitor],
+                        datasets: [{
+                          label: 'Engagement Rate',
+                          data: [metrics.instagramEngagementRate, metrics.competitorInstagramEngagementRate],
+                          backgroundColor: [
+                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(156, 163, 175, 0.7)'
+                          ]
+                        }]
+                      }}
+                      options={{
+                        plugins: { legend: { display: false } },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                          x: { ticks: { color: darkMode ? 'white' : 'black' } },
+                          y: { beginAtZero: true, ticks: { color: darkMode ? 'white' : 'black' } }
+                        }
+                      }}
+                      height={180}
+                    />
+                  </div>
+                </motion.div>
               </>
             )}
-            
+
             {/* TikTok KPIs */}
-            {filterOptions.platform === 'TikTok' && (
+            {(filterOptions.platform === 'TikTok' || filterOptions.platform === 'All') && (
               <>
                 {/* Total Posts */}
                 <motion.div
-                  custom={0}
+                  custom={4}
                   variants={cardVariants}
                   initial="hidden"
                   animate="visible"
@@ -1107,7 +1242,7 @@ const DashboardOverview: React.FC = () => {
                       <p>{metrics.selectedCompetitor}</p>
                       <p className="font-medium">{formatNumber(metrics.competitorTikTokPosts)}</p>
                     </div>
-                     {metrics.totalTikTokPosts > 0 && metrics.competitorTikTokPosts > 0 && (
+                    {metrics.totalTikTokPosts > 0 && metrics.competitorTikTokPosts > 0 && (
                       <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
                         <p>
                           {metrics.totalTikTokPosts > metrics.competitorTikTokPosts 
@@ -1119,49 +1254,37 @@ const DashboardOverview: React.FC = () => {
                       </div>
                     )}
                   </div>
-                </motion.div>
-                
-                {/* Total Views */}
-                <motion.div
-                  custom={1}
-                  variants={cardVariants}
-                  initial="hidden"
-                  animate="visible"
-                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Views</p>
-                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{formatNumber(metrics.totalTikTokViews)}</h3>
-                    </div>
-                    <AiIcons.AiOutlineEye className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
-                  </div>
-                  <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
-                    <div className="flex justify-between">
-                      <p>Nordstrom Avg</p>
-                      <p className="font-medium">{formatNumber(metrics.avgTikTokViews)}</p>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <p>{metrics.selectedCompetitor} Avg</p>
-                      <p className="font-medium">{formatNumber(metrics.competitorAvgTikTokViews)}</p>
-                    </div>
-                    {metrics.avgTikTokViews > 0 && metrics.competitorAvgTikTokViews > 0 && (
-                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                        <p>
-                          {metrics.avgTikTokViews > metrics.competitorAvgTikTokViews 
-                            ? `Nordstrom averages ${formatNumber(metrics.avgTikTokViews - metrics.competitorAvgTikTokViews)} more views.`
-                            : metrics.avgTikTokViews < metrics.competitorAvgTikTokViews
-                              ? `${metrics.selectedCompetitor} averages ${formatNumber(metrics.competitorAvgTikTokViews - metrics.avgTikTokViews)} more views.`
-                              : 'Equal average views.'}
-                        </p>
-                      </div>
-                    )}
+                  {/* Posts Comparison Chart */}
+                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                    <Bar
+                      data={{
+                        labels: ['Nordstrom', metrics.selectedCompetitor],
+                        datasets: [{
+                          label: 'Posts',
+                          data: [metrics.totalTikTokPosts, metrics.competitorTikTokPosts],
+                          backgroundColor: [
+                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(156, 163, 175, 0.7)'
+                          ]
+                        }]
+                      }}
+                      options={{
+                        plugins: { legend: { display: false } },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                          x: { ticks: { color: darkMode ? 'white' : 'black' } },
+                          y: { beginAtZero: true, ticks: { color: darkMode ? 'white' : 'black' } }
+                        }
+                      }}
+                      height={180}
+                    />
                   </div>
                 </motion.div>
                 
                 {/* Total Likes */}
                 <motion.div
-                  custom={2}
+                  custom={5}
                   variants={cardVariants}
                   initial="hidden"
                   animate="visible"
@@ -1195,11 +1318,101 @@ const DashboardOverview: React.FC = () => {
                       </div>
                     )}
                   </div>
+                  {/* Likes Comparison Chart */}
+                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                    <Bar
+                      data={{
+                        labels: ['Nordstrom', metrics.selectedCompetitor],
+                        datasets: [{
+                          label: 'Likes',
+                          data: [metrics.totalTikTokLikes, metrics.competitorTikTokLikes],
+                          backgroundColor: [
+                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(156, 163, 175, 0.7)'
+                          ]
+                        }]
+                      }}
+                      options={{
+                        plugins: { legend: { display: false } },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                          x: { ticks: { color: darkMode ? 'white' : 'black' } },
+                          y: { beginAtZero: true, ticks: { color: darkMode ? 'white' : 'black' } }
+                        }
+                      }}
+                      height={180}
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Total Comments */}
+                <motion.div
+                  custom={6}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Comments</p>
+                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{formatNumber(metrics.totalTikTokComments)}</h3>
+                    </div>
+                    <FaIcons.FaComments className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
+                  </div>
+                  <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
+                    <div className="flex justify-between">
+                      <p>Nordstrom Avg</p>
+                      <p className="font-medium">{formatNumber(metrics.avgTikTokComments)}</p>
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <p>{metrics.selectedCompetitor} Avg</p>
+                      <p className="font-medium">{formatNumber(metrics.competitorAvgTikTokComments)}</p>
+                    </div>
+                    {metrics.avgTikTokComments > 0 && metrics.competitorAvgTikTokComments > 0 && (
+                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                        <p>
+                          {metrics.avgTikTokComments > metrics.competitorAvgTikTokComments 
+                            ? `Nordstrom averages ${formatNumber(metrics.avgTikTokComments - metrics.competitorAvgTikTokComments)} more comments.`
+                            : metrics.avgTikTokComments < metrics.competitorAvgTikTokComments
+                              ? `${metrics.selectedCompetitor} averages ${formatNumber(metrics.competitorAvgTikTokComments - metrics.avgTikTokComments)} more comments.`
+                              : 'Equal average comments.'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  {/* Comments Comparison Chart */}
+                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                    <Bar
+                      data={{
+                        labels: ['Nordstrom', metrics.selectedCompetitor],
+                        datasets: [{
+                          label: 'Comments',
+                          data: [metrics.totalTikTokComments, metrics.competitorTikTokComments],
+                          backgroundColor: [
+                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(156, 163, 175, 0.7)'
+                          ]
+                        }]
+                      }}
+                      options={{
+                        plugins: { legend: { display: false } },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                          x: { ticks: { color: darkMode ? 'white' : 'black' } },
+                          y: { beginAtZero: true, ticks: { color: darkMode ? 'white' : 'black' } }
+                        }
+                      }}
+                      height={180}
+                    />
+                  </div>
                 </motion.div>
                 
                 {/* Total Shares */}
                 <motion.div
-                  custom={3}
+                  custom={6}
                   variants={cardVariants}
                   initial="hidden"
                   animate="visible"
@@ -1210,7 +1423,7 @@ const DashboardOverview: React.FC = () => {
                       <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Shares</p>
                       <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{formatNumber(metrics.totalTikTokShares)}</h3>
                     </div>
-                    <FaIcons.FaShare className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
+                    <FaIcons.FaShareSquare className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
                   </div>
                   <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
                     <div className="flex justify-between">
@@ -1233,8 +1446,86 @@ const DashboardOverview: React.FC = () => {
                       </div>
                     )}
                   </div>
+                  {/* Shares Comparison Chart */}
+                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                    <Bar
+                      data={{
+                        labels: ['Nordstrom', metrics.selectedCompetitor],
+                        datasets: [{
+                          label: 'Shares',
+                          data: [metrics.totalTikTokShares, metrics.competitorTikTokShares],
+                          backgroundColor: [
+                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(156, 163, 175, 0.7)'
+                          ]
+                        }]
+                      }}
+                      options={{
+                        plugins: { legend: { display: false } },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                          x: { ticks: { color: darkMode ? 'white' : 'black' } },
+                          y: { beginAtZero: true, ticks: { color: darkMode ? 'white' : 'black' } }
+                        }
+                      }}
+                      height={180}
+                    />
+                  </div>
                 </motion.div>
-
+                
+                {/* Engagement Rate */}
+                <motion.div
+                  custom={7}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Engagement Rate</p>
+                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{metrics.tikTokEngagementRate?.toFixed(2)}%</h3>
+                    </div>
+                    <AiIcons.AiOutlineInteraction className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
+                  </div>
+                  <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
+                    <div className="flex justify-between">
+                      <p>Nordstrom</p>
+                      <p className="font-medium">{metrics.tikTokEngagementRate?.toFixed(2)}%</p>
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <p>{metrics.selectedCompetitor}</p>
+                      <p className="font-medium">{metrics.competitorTikTokEngagementRate?.toFixed(2)}%</p>
+                    </div>
+                  </div>
+                  {/* Engagement Rate Comparison Chart */}
+                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                    <Bar
+                      data={{
+                        labels: ['Nordstrom', metrics.selectedCompetitor],
+                        datasets: [{
+                          label: 'Engagement Rate',
+                          data: [metrics.tikTokEngagementRate, metrics.competitorTikTokEngagementRate],
+                          backgroundColor: [
+                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(156, 163, 175, 0.7)'
+                          ]
+                        }]
+                      }}
+                      options={{
+                        plugins: { legend: { display: false } },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                          x: { ticks: { color: darkMode ? 'white' : 'black' } },
+                          y: { beginAtZero: true, ticks: { color: darkMode ? 'white' : 'black' } }
+                        }
+                      }}
+                      height={180}
+                    />
+                  </div>
+                </motion.div>
               </>
             )}
           </div>
