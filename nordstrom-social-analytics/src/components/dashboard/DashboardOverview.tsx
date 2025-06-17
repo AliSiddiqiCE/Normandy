@@ -823,60 +823,48 @@ const DashboardOverview: React.FC = () => {
 
   return (
     <div id="dashboard-content-to-export" className="space-y-4">
-      {/* KPI Cards Section */}
-      <div className="mt-2">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className={`rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg p-6`} /* Updated styling */
-        >
-          <div className="flex justify-between items-center mb-4"> {/* mb-4 can be adjusted if p-6 provides enough space */}
-            <h2 className="text-xl font-semibold text-nordstrom-blue"> {/* Updated styling */}
-              <BiIcons.BiStats className="inline-block mr-2 text-nordstrom-blue" /> {/* Updated styling */}
-              Key Performance Indicators
-            </h2>
-            
-            <div className="flex gap-3">
+          {/* KPI Cards Section */}
+          <div className="mt-2">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className={`rounded-xl ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg p-6`} /* Updated styling */
+            >
+              <div className="flex justify-between items-center mb-4"> {/* mb-4 can be adjusted if p-6 provides enough space */}
+                <h2 className="text-xl font-semibold text-nordstrom-blue"> {/* Updated styling */}
+                  <BiIcons.BiStats className="inline-block mr-2 text-nordstrom-blue" /> {/* Updated styling */}
+                  Key Performance Indicators
+                </h2>
+                         <div className="flex gap-3">
               {/* Platform Selector */}
-              <FormControl variant="outlined" size="small" className="min-w-[150px]" sx={{
-                '& .MuiInputLabel-root': {
-                  color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
-                },
-                '& .MuiOutlinedInput-root': {
-                  color: darkMode ? 'white' : undefined,
-                  '& fieldset': {
-                    borderColor: darkMode ? 'rgba(255, 255, 255, 0.23)' : undefined
-                  },
-                  '&:hover fieldset': {
-                    borderColor: darkMode ? 'rgba(255, 255, 255, 0.5)' : undefined
-                  }
-                },
-                '& .MuiSelect-icon': {
-                  color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
-                }
-              }}>
-                <InputLabel>Platform</InputLabel>
-                <Select
-                  value={activePlatform}
-                  onChange={(e) => setActivePlatform(e.target.value as 'Instagram' | 'TikTok')}
-                  label="Platform"
-                  MenuProps={{
-                    PaperProps: {
-                      sx: {
-                        bgcolor: darkMode ? 'rgb(45, 45, 45)' : undefined,
-                        color: darkMode ? 'white' : undefined,
-                        '& .MuiMenuItem-root:hover': {
-                          bgcolor: darkMode ? 'rgba(255, 255, 255, 0.08)' : undefined
-                        }
-                      }
-                    }
-                  }}
-                >
-                  <MenuItem value="Instagram">Instagram</MenuItem>
-                  <MenuItem value="TikTok">TikTok</MenuItem>
-                </Select>
-              </FormControl>
+              <ToggleButtonGroup
+  value={activePlatform}
+  exclusive
+  onChange={(_, newPlatform) => {
+    if (newPlatform) setActivePlatform(newPlatform);
+  }}
+  size="small"
+  aria-label="Platform"
+  sx={{
+    backgroundColor: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)',
+    borderRadius: 2,
+    '& .MuiToggleButton-root': {
+      color: darkMode ? 'rgba(255,255,255,0.8)' : 'rgba(55,65,81,1)',
+      fontWeight: 600,
+      fontSize: '0.95rem',
+      px: 2.5,
+      py: 1,
+      '&.Mui-selected': {
+        backgroundColor: darkMode ? 'rgba(0, 120, 212, 0.3)' : 'rgba(0, 120, 212, 0.12)',
+        color: darkMode ? '#fff' : '#00539b',
+      },
+    },
+  }}
+>
+  <ToggleButton value="Instagram" aria-label="Instagram">Instagram</ToggleButton>
+  <ToggleButton value="TikTok" aria-label="TikTok">TikTok</ToggleButton>
+</ToggleButtonGroup>
 
               {/* Month Selector */}
               <FormControl variant="outlined" size="small" className="min-w-[150px]" sx={{
@@ -896,11 +884,11 @@ const DashboardOverview: React.FC = () => {
                   color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
                 }
               }}>
-                <InputLabel>Month</InputLabel>
+                <InputLabel>Date</InputLabel>
                 <Select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value as string)}
-                  label="Month"
+                  label="Date"
                   MenuProps={{
                     PaperProps: {
                       sx: {
@@ -939,11 +927,11 @@ const DashboardOverview: React.FC = () => {
                   color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
                 }
               }}>
-                <InputLabel>Compare with</InputLabel>
+                <InputLabel>Brand</InputLabel>
                 <Select
                   value={selectedCompetitor}
                   onChange={(e) => setSelectedCompetitor(e.target.value as Brand)}
-                  label="Compare with"
+                  label="Brand"
                   MenuProps={{
                     PaperProps: {
                       sx: {
@@ -983,27 +971,7 @@ const DashboardOverview: React.FC = () => {
                     </div>
                     <FaIcons.FaInstagram className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
                   </div>
-                  <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
-                    <div className="flex justify-between">
-                      <p>Nordstrom</p>
-                      <p className="font-medium">{formatNumber(metrics.totalInstagramPosts)}</p>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <p>{metrics.selectedCompetitor}</p>
-                      <p className="font-medium">{formatNumber(metrics.competitorInstagramPosts)}</p>
-                    </div>
-                    {metrics.totalInstagramPosts > 0 && metrics.competitorInstagramPosts > 0 && (
-                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                        <p>
-                          {metrics.totalInstagramPosts > metrics.competitorInstagramPosts 
-                            ? `Nordstrom has ${formatNumber(metrics.totalInstagramPosts - metrics.competitorInstagramPosts)} more posts.`
-                            : metrics.totalInstagramPosts < metrics.competitorInstagramPosts
-                              ? `${metrics.selectedCompetitor} has ${formatNumber(metrics.competitorInstagramPosts - metrics.totalInstagramPosts)} more posts.`
-                              : 'Equal number of posts.'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  
                   {/* Posts Comparison Chart */}
                   <div className="mt-4 h-64 w-full flex items-center justify-center">
                     <Bar
@@ -1013,7 +981,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Posts',
                           data: [metrics.totalInstagramPosts, metrics.competitorInstagramPosts],
                           backgroundColor: [
-                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(255, 140, 0, 0.85)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1047,27 +1015,7 @@ const DashboardOverview: React.FC = () => {
                     </div>
                     <AiIcons.AiFillHeart className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
                   </div>
-                  <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
-                    <div className="flex justify-between">
-                      <p>Nordstrom Avg</p>
-                      <p className="font-medium">{formatNumber(metrics.avgInstagramLikes)}</p>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <p>{metrics.selectedCompetitor} Avg</p>
-                      <p className="font-medium">{formatNumber(metrics.competitorAvgInstagramLikes)}</p>
-                    </div>
-                    {metrics.avgInstagramLikes > 0 && metrics.competitorAvgInstagramLikes > 0 && (
-                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                        <p>
-                          {metrics.avgInstagramLikes > metrics.competitorAvgInstagramLikes 
-                            ? `Nordstrom averages ${formatNumber(metrics.avgInstagramLikes - metrics.competitorAvgInstagramLikes)} more likes.`
-                            : metrics.avgInstagramLikes < metrics.competitorAvgInstagramLikes
-                              ? `${metrics.selectedCompetitor} averages ${formatNumber(metrics.competitorAvgInstagramLikes - metrics.avgInstagramLikes)} more likes.`
-                              : 'Equal average likes.'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  
                   {/* Likes Comparison Chart */}
                   <div className="mt-4 h-64 w-full flex items-center justify-center">
                     <Bar
@@ -1077,7 +1025,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Likes',
                           data: [metrics.totalInstagramLikes, metrics.competitorInstagramLikes],
                           backgroundColor: [
-                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(255, 140, 0, 0.85)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1111,27 +1059,7 @@ const DashboardOverview: React.FC = () => {
                     </div>
                     <FaIcons.FaComments className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
                   </div>
-                  <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
-                    <div className="flex justify-between">
-                      <p>Nordstrom Avg</p>
-                      <p className="font-medium">{formatNumber(metrics.avgInstagramComments)}</p>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <p>{metrics.selectedCompetitor} Avg</p>
-                      <p className="font-medium">{formatNumber(metrics.competitorAvgInstagramComments)}</p>
-                    </div>
-                    {metrics.avgInstagramComments > 0 && metrics.competitorAvgInstagramComments > 0 && (
-                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                        <p>
-                          {metrics.avgInstagramComments > metrics.competitorAvgInstagramComments 
-                            ? `Nordstrom averages ${formatNumber(metrics.avgInstagramComments - metrics.competitorAvgInstagramComments)} more comments.`
-                            : metrics.avgInstagramComments < metrics.competitorAvgInstagramComments
-                              ? `${metrics.selectedCompetitor} averages ${formatNumber(metrics.competitorAvgInstagramComments - metrics.avgInstagramComments)} more comments.`
-                              : 'Equal average comments.'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  
                   {/* Comments Comparison Chart */}
                   <div className="mt-4 h-64 w-full flex items-center justify-center">
                     <Bar
@@ -1141,7 +1069,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Comments',
                           data: [metrics.totalInstagramComments, metrics.competitorInstagramComments],
                           backgroundColor: [
-                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(255, 140, 0, 0.85)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1175,16 +1103,7 @@ const DashboardOverview: React.FC = () => {
                     </div>
                     <AiIcons.AiOutlineInteraction className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
                   </div>
-                  <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
-                    <div className="flex justify-between">
-                      <p>Nordstrom</p>
-                      <p className="font-medium">{metrics.instagramEngagementRate?.toFixed(2)}%</p>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <p>{metrics.selectedCompetitor}</p>
-                      <p className="font-medium">{metrics.competitorInstagramEngagementRate?.toFixed(2)}%</p>
-                    </div>
-                  </div>
+                  
                   {/* Engagement Rate Comparison Chart */}
                   <div className="mt-4 h-64 w-full flex items-center justify-center">
                     <Bar
@@ -1194,7 +1113,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Engagement Rate',
                           data: [metrics.instagramEngagementRate, metrics.competitorInstagramEngagementRate],
                           backgroundColor: [
-                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(255, 140, 0, 0.85)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1233,27 +1152,7 @@ const DashboardOverview: React.FC = () => {
                     </div>
                     <FaIcons.FaTiktok className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
                   </div>
-                  <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
-                    <div className="flex justify-between">
-                      <p>Nordstrom</p>
-                      <p className="font-medium">{formatNumber(metrics.totalTikTokPosts)}</p>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <p>{metrics.selectedCompetitor}</p>
-                      <p className="font-medium">{formatNumber(metrics.competitorTikTokPosts)}</p>
-                    </div>
-                    {metrics.totalTikTokPosts > 0 && metrics.competitorTikTokPosts > 0 && (
-                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                        <p>
-                          {metrics.totalTikTokPosts > metrics.competitorTikTokPosts 
-                            ? `Nordstrom has ${formatNumber(metrics.totalTikTokPosts - metrics.competitorTikTokPosts)} more posts.`
-                            : metrics.totalTikTokPosts < metrics.competitorTikTokPosts
-                              ? `${metrics.selectedCompetitor} has ${formatNumber(metrics.competitorTikTokPosts - metrics.totalTikTokPosts)} more posts.`
-                              : 'Equal number of posts.'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  
                   {/* Posts Comparison Chart */}
                   <div className="mt-4 h-64 w-full flex items-center justify-center">
                     <Bar
@@ -1263,7 +1162,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Posts',
                           data: [metrics.totalTikTokPosts, metrics.competitorTikTokPosts],
                           backgroundColor: [
-                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(255, 140, 0, 0.85)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1297,27 +1196,7 @@ const DashboardOverview: React.FC = () => {
                     </div>
                     <AiIcons.AiFillHeart className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
                   </div>
-                  <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
-                    <div className="flex justify-between">
-                      <p>Nordstrom Avg</p>
-                      <p className="font-medium">{formatNumber(metrics.avgTikTokLikes)}</p>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <p>{metrics.selectedCompetitor} Avg</p>
-                      <p className="font-medium">{formatNumber(metrics.competitorAvgTikTokLikes)}</p>
-                    </div>
-                    {metrics.avgTikTokLikes > 0 && metrics.competitorAvgTikTokLikes > 0 && (
-                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                        <p>
-                          {metrics.avgTikTokLikes > metrics.competitorAvgTikTokLikes 
-                            ? `Nordstrom averages ${formatNumber(metrics.avgTikTokLikes - metrics.competitorAvgTikTokLikes)} more likes.`
-                            : metrics.avgTikTokLikes < metrics.competitorAvgTikTokLikes
-                              ? `${metrics.selectedCompetitor} averages ${formatNumber(metrics.competitorAvgTikTokLikes - metrics.avgTikTokLikes)} more likes.`
-                              : 'Equal average likes.'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  
                   {/* Likes Comparison Chart */}
                   <div className="mt-4 h-64 w-full flex items-center justify-center">
                     <Bar
@@ -1327,7 +1206,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Likes',
                           data: [metrics.totalTikTokLikes, metrics.competitorTikTokLikes],
                           backgroundColor: [
-                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(255, 140, 0, 0.85)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1361,27 +1240,7 @@ const DashboardOverview: React.FC = () => {
                     </div>
                     <FaIcons.FaComments className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
                   </div>
-                  <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
-                    <div className="flex justify-between">
-                      <p>Nordstrom Avg</p>
-                      <p className="font-medium">{formatNumber(metrics.avgTikTokComments)}</p>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <p>{metrics.selectedCompetitor} Avg</p>
-                      <p className="font-medium">{formatNumber(metrics.competitorAvgTikTokComments)}</p>
-                    </div>
-                    {metrics.avgTikTokComments > 0 && metrics.competitorAvgTikTokComments > 0 && (
-                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                        <p>
-                          {metrics.avgTikTokComments > metrics.competitorAvgTikTokComments 
-                            ? `Nordstrom averages ${formatNumber(metrics.avgTikTokComments - metrics.competitorAvgTikTokComments)} more comments.`
-                            : metrics.avgTikTokComments < metrics.competitorAvgTikTokComments
-                              ? `${metrics.selectedCompetitor} averages ${formatNumber(metrics.competitorAvgTikTokComments - metrics.avgTikTokComments)} more comments.`
-                              : 'Equal average comments.'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  
                   {/* Comments Comparison Chart */}
                   <div className="mt-4 h-64 w-full flex items-center justify-center">
                     <Bar
@@ -1391,7 +1250,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Comments',
                           data: [metrics.totalTikTokComments, metrics.competitorTikTokComments],
                           backgroundColor: [
-                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(255, 140, 0, 0.85)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1425,27 +1284,7 @@ const DashboardOverview: React.FC = () => {
                     </div>
                     <FaIcons.FaShareSquare className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
                   </div>
-                  <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
-                    <div className="flex justify-between">
-                      <p>Nordstrom Avg</p>
-                      <p className="font-medium">{formatNumber(metrics.avgTikTokShares)}</p>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <p>{metrics.selectedCompetitor} Avg</p>
-                      <p className="font-medium">{formatNumber(metrics.competitorAvgTikTokShares)}</p>
-                    </div>
-                    {metrics.avgTikTokShares > 0 && metrics.competitorAvgTikTokShares > 0 && (
-                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                        <p>
-                          {metrics.avgTikTokShares > metrics.competitorAvgTikTokShares 
-                            ? `Nordstrom averages ${formatNumber(metrics.avgTikTokShares - metrics.competitorAvgTikTokShares)} more shares.`
-                            : metrics.avgTikTokShares < metrics.competitorAvgTikTokShares
-                              ? `${metrics.selectedCompetitor} averages ${formatNumber(metrics.competitorAvgTikTokShares - metrics.avgTikTokShares)} more shares.`
-                              : 'Equal average shares.'}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  
                   {/* Shares Comparison Chart */}
                   <div className="mt-4 h-64 w-full flex items-center justify-center">
                     <Bar
@@ -1455,7 +1294,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Shares',
                           data: [metrics.totalTikTokShares, metrics.competitorTikTokShares],
                           backgroundColor: [
-                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(255, 140, 0, 0.85)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1489,16 +1328,7 @@ const DashboardOverview: React.FC = () => {
                     </div>
                     <AiIcons.AiOutlineInteraction className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
                   </div>
-                  <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
-                    <div className="flex justify-between">
-                      <p>Nordstrom</p>
-                      <p className="font-medium">{metrics.tikTokEngagementRate?.toFixed(2)}%</p>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <p>{metrics.selectedCompetitor}</p>
-                      <p className="font-medium">{metrics.competitorTikTokEngagementRate?.toFixed(2)}%</p>
-                    </div>
-                  </div>
+                  
                   {/* Engagement Rate Comparison Chart */}
                   <div className="mt-4 h-64 w-full flex items-center justify-center">
                     <Bar
@@ -1508,7 +1338,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Engagement Rate',
                           data: [metrics.tikTokEngagementRate, metrics.competitorTikTokEngagementRate],
                           backgroundColor: [
-                            'rgba(37, 99, 235, 0.8)',
+                            'rgba(255, 140, 0, 0.85)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1655,6 +1485,21 @@ const DashboardOverview: React.FC = () => {
             }}
             size="small"
             aria-label="Platform"
+            sx={{
+              backgroundColor: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)',
+              borderRadius: 2,
+              '& .MuiToggleButton-root': {
+                color: darkMode ? 'rgba(255,255,255,0.8)' : 'rgba(55,65,81,1)',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                px: 2.5,
+                py: 1,
+                '&.Mui-selected': {
+                  backgroundColor: darkMode ? 'rgba(0, 120, 212, 0.3)' : 'rgba(0, 120, 212, 0.12)',
+                  color: darkMode ? '#fff' : '#00539b',
+                },
+              },
+            }}
           >
             <ToggleButton value="Instagram" aria-label="Instagram">
               Instagram
