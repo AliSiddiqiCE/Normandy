@@ -61,22 +61,48 @@ ChartJS.register(
 );
 
 const DashboardOverview: React.FC = () => {
-  const { socialData, isLoading, error, selectedBrands, filterOptions, setFilterOptions, darkMode } = useSocialData();
+  // ...existing hooks
+  const [activeTopPostsPlatform, setActiveTopPostsPlatform] = useState<'Instagram' | 'TikTok'>('Instagram');
+  const { 
+    socialData, 
+    isLoading, 
+    error, 
+    selectedBrands, 
+    getLocalFilterOptions, 
+    setLocalFilterOptions,
+    darkMode 
+  } = useSocialData();
+  
+  // Get local filter options for this component
+  const componentId = 'dashboard-overview';
+  const filterOptions = getLocalFilterOptions(componentId);
   
   // Define state hooks at the top level of the component (before any conditionals)
   const [activeSentimentBrand, setActiveSentimentBrand] = useState<Brand>('Nordstrom');
   const [activeTab, setActiveTab] = useState<'overview' | 'sentiment'>('overview');
   
   // Initialize activePlatform from filterOptions.platform or default to 'Instagram'
-  const [activePlatform, setActivePlatform] = useState<'Instagram' | 'TikTok'>(filterOptions.platform as 'Instagram' | 'TikTok' || 'Instagram');
+  const [activePlatform, setActivePlatform] = useState<'Instagram' | 'TikTok'>(
+    (filterOptions.platform as 'Instagram' | 'TikTok' || 'Instagram')
+  );
   
-  // Set Instagram as default platform if not already set
+  // Set default platform if not already set
   useEffect(() => {
-    if (!filterOptions.platform || filterOptions.platform === 'All') {
-      setFilterOptions({ ...filterOptions, platform: 'Instagram' });
+    if (!filterOptions.platform) {
+      setLocalFilterOptions(componentId, { platform: 'All' });
     }
   }, []);
+  
   const [selectedCompetitor, setSelectedCompetitor] = useState<Brand>('Macys');
+  const [selectedMonth, setSelectedMonth] = useState<string>('All (Feb-May)');
+  
+  // Update local filters when selections change
+  useEffect(() => {
+    setLocalFilterOptions(componentId, { 
+      platform: activePlatform,
+      selectedMonth: selectedMonth === 'All (Feb-May)' ? undefined : selectedMonth
+    });
+  }, [activePlatform, selectedMonth]);
   
   // Show loading state
   if (isLoading) {
@@ -743,8 +769,8 @@ const DashboardOverview: React.FC = () => {
   const handlePlatformChange = (event: React.MouseEvent<HTMLElement>, newPlatform: 'Instagram' | 'TikTok') => {
     if (newPlatform !== null) {
       setActivePlatform(newPlatform);
-      // Update filter options in context
-      setFilterOptions({ ...filterOptions, platform: newPlatform });
+      // Update local filter options
+      setLocalFilterOptions(componentId, { platform: newPlatform });
     }
   };
 
@@ -790,47 +816,131 @@ const DashboardOverview: React.FC = () => {
               Key Performance Indicators
             </h2>
             
-            <FormControl variant="outlined" size="small" className="min-w-[200px]" sx={{
-              '& .MuiInputLabel-root': {
-                color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
-              },
-              '& .MuiOutlinedInput-root': {
-                color: darkMode ? 'white' : undefined,
-                '& fieldset': {
-                  borderColor: darkMode ? 'rgba(255, 255, 255, 0.23)' : undefined
+            <div className="flex gap-3">
+              {/* Platform Selector */}
+              <FormControl variant="outlined" size="small" className="min-w-[150px]" sx={{
+                '& .MuiInputLabel-root': {
+                  color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
                 },
-                '&:hover fieldset': {
-                  borderColor: darkMode ? 'rgba(255, 255, 255, 0.5)' : undefined
+                '& .MuiOutlinedInput-root': {
+                  color: darkMode ? 'white' : undefined,
+                  '& fieldset': {
+                    borderColor: darkMode ? 'rgba(255, 255, 255, 0.23)' : undefined
+                  },
+                  '&:hover fieldset': {
+                    borderColor: darkMode ? 'rgba(255, 255, 255, 0.5)' : undefined
+                  }
+                },
+                '& .MuiSelect-icon': {
+                  color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
                 }
-              },
-              '& .MuiSelect-icon': {
-                color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
-              }
-            }}>
-              <InputLabel id="competitor-select-label">Compare with</InputLabel>
-              <Select
-                labelId="competitor-select-label"
-                id="competitor-select"
-                value={selectedCompetitor}
-                onChange={(e) => setSelectedCompetitor(e.target.value as Brand)}
-                label="Compare with"
-                MenuProps={{
-                  PaperProps: {
-                    sx: {
-                      bgcolor: darkMode ? 'rgb(45, 45, 45)' : undefined,
-                      color: darkMode ? 'white' : undefined,
-                      '& .MuiMenuItem-root:hover': {
-                        bgcolor: darkMode ? 'rgba(255, 255, 255, 0.08)' : undefined
+              }}>
+                <InputLabel>Platform</InputLabel>
+                <Select
+                  value={activePlatform}
+                  onChange={(e) => setActivePlatform(e.target.value as 'Instagram' | 'TikTok')}
+                  label="Platform"
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        bgcolor: darkMode ? 'rgb(45, 45, 45)' : undefined,
+                        color: darkMode ? 'white' : undefined,
+                        '& .MuiMenuItem-root:hover': {
+                          bgcolor: darkMode ? 'rgba(255, 255, 255, 0.08)' : undefined
+                        }
                       }
                     }
+                  }}
+                >
+                  <MenuItem value="Instagram">Instagram</MenuItem>
+                  <MenuItem value="TikTok">TikTok</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Month Selector */}
+              <FormControl variant="outlined" size="small" className="min-w-[150px]" sx={{
+                '& .MuiInputLabel-root': {
+                  color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
+                },
+                '& .MuiOutlinedInput-root': {
+                  color: darkMode ? 'white' : undefined,
+                  '& fieldset': {
+                    borderColor: darkMode ? 'rgba(255, 255, 255, 0.23)' : undefined
+                  },
+                  '&:hover fieldset': {
+                    borderColor: darkMode ? 'rgba(255, 255, 255, 0.5)' : undefined
                   }
-                }}
-              >
-                {selectedBrands.filter(brand => brand !== 'Nordstrom').map((brand) => (
-                  <MenuItem key={brand} value={brand}>{brand}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                },
+                '& .MuiSelect-icon': {
+                  color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
+                }
+              }}>
+                <InputLabel>Month</InputLabel>
+                <Select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value as string)}
+                  label="Month"
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        bgcolor: darkMode ? 'rgb(45, 45, 45)' : undefined,
+                        color: darkMode ? 'white' : undefined,
+                        '& .MuiMenuItem-root:hover': {
+                          bgcolor: darkMode ? 'rgba(255, 255, 255, 0.08)' : undefined
+                        }
+                      }
+                    }
+                  }}
+                >
+                  <MenuItem value="All (Feb-May)">All Months</MenuItem>
+                  <MenuItem value="February">February</MenuItem>
+                  <MenuItem value="March">March</MenuItem>
+                  <MenuItem value="April">April</MenuItem>
+                  <MenuItem value="May">May</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* Competitor Selector */}
+              <FormControl variant="outlined" size="small" className="min-w-[150px]" sx={{
+                '& .MuiInputLabel-root': {
+                  color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
+                },
+                '& .MuiOutlinedInput-root': {
+                  color: darkMode ? 'white' : undefined,
+                  '& fieldset': {
+                    borderColor: darkMode ? 'rgba(255, 255, 255, 0.23)' : undefined
+                  },
+                  '&:hover fieldset': {
+                    borderColor: darkMode ? 'rgba(255, 255, 255, 0.5)' : undefined
+                  }
+                },
+                '& .MuiSelect-icon': {
+                  color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
+                }
+              }}>
+                <InputLabel>Compare with</InputLabel>
+                <Select
+                  value={selectedCompetitor}
+                  onChange={(e) => setSelectedCompetitor(e.target.value as Brand)}
+                  label="Compare with"
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        bgcolor: darkMode ? 'rgb(45, 45, 45)' : undefined,
+                        color: darkMode ? 'white' : undefined,
+                        '& .MuiMenuItem-root:hover': {
+                          bgcolor: darkMode ? 'rgba(255, 255, 255, 0.08)' : undefined
+                        }
+                      }
+                    }
+                  }}
+                >
+                  {selectedBrands.filter(brand => brand !== 'Nordstrom').map((brand) => (
+                    <MenuItem key={brand} value={brand}>{brand}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1137,29 +1247,19 @@ const DashboardOverview: React.FC = () => {
             </h2>
           </div>
           
-          {/* Instagram Sentiment Analysis */}
-          {filterOptions.platform === 'Instagram' && (
-            <SentimentAnalysis 
-              platform="Instagram" 
-              selectedBrands={selectedBrands} 
-              posts={selectedBrands.reduce((acc, brand) => {
-                acc[brand] = socialData.instagram[brand]?.posts || [];
-                return acc;
-              }, {} as Record<Brand, InstagramPost[] | TikTokPost[]>)}
-            />
-          )}
-          
-          {/* TikTok Sentiment Analysis */}
-          {filterOptions.platform === 'TikTok' && (
-            <SentimentAnalysis 
-              platform="TikTok" 
-              selectedBrands={selectedBrands} 
-              posts={selectedBrands.reduce((acc, brand) => {
-                acc[brand] = socialData.tiktok[brand]?.posts || [];
-                return acc;
-              }, {} as Record<Brand, InstagramPost[] | TikTokPost[]>)}
-            />
-          )}
+          {/* Sentiment Analysis with Platform and Month Filters */}
+          <SentimentAnalysis
+            selectedBrands={selectedBrands}
+            posts={selectedBrands.reduce((acc, brand) => {
+              // Always pass both Instagram and TikTok posts for all brands
+              const igPosts = socialData.instagram[brand]?.posts || [];
+              const tkPosts = socialData.tiktok[brand]?.posts || [];
+              acc[brand] = [...igPosts, ...tkPosts];
+              return acc;
+            }, {} as Record<Brand, (InstagramPost | TikTokPost)[]>)}
+            selectedMonth={selectedMonth}
+            onMonthChange={setSelectedMonth}
+          />
         </motion.div>
       </div>
       
@@ -1220,68 +1320,72 @@ const DashboardOverview: React.FC = () => {
             </h2>
           </div>
           
-          {/* Instagram Hashtag Analytics */}
-          {filterOptions.platform === 'Instagram' && (
-            <HashtagSection 
-              platform="Instagram" 
-              selectedBrands={selectedBrands} 
+          {/* Hashtag Analytics (per platform) */}
+          {/* Hashtag Analytics (per platform) */}
+          {(filterOptions.platform === 'Instagram' || filterOptions.platform === 'TikTok') && (
+            <HashtagSection
+              platform={filterOptions.platform as 'Instagram' | 'TikTok'}
+              selectedBrands={selectedBrands}
               posts={selectedBrands.reduce((acc, brand) => {
-                acc[brand] = socialData.instagram[brand]?.posts || [];
-                return acc;
-              }, {} as Record<Brand, InstagramPost[] | TikTokPost[]>)}
-            />
-          )}
-          
-          {/* TikTok Hashtag Analytics */}
-          {filterOptions.platform === 'TikTok' && (
-            <HashtagSection 
-              platform="TikTok" 
-              selectedBrands={selectedBrands} 
-              posts={selectedBrands.reduce((acc, brand) => {
-                acc[brand] = socialData.tiktok[brand]?.posts || [];
-                return acc;
-              }, {} as Record<Brand, InstagramPost[] | TikTokPost[]>)}
-            />
-          )}
-          
-          {/* Instagram Top Posts Section */}
-          {filterOptions.platform === 'Instagram' && (
-            <motion.div 
-              className={`rounded-lg p-6 mt-6 shadow-md ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <InstagramTopPostsSection
-                selectedBrands={selectedBrands}
-                posts={selectedBrands.reduce((acc, brand) => {
+                if (filterOptions.platform === 'Instagram') {
                   acc[brand] = socialData.instagram[brand]?.posts || [];
-                  return acc;
-                }, {} as Record<Brand, InstagramPost[]>)}
-              />
-            </motion.div>
-          )}
-          
-          {/* TikTok Top Posts Section */}
-          {filterOptions.platform === 'TikTok' && (
-            <motion.div 
-              className={`rounded-lg p-6 mt-6 shadow-md ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <TikTokTopPostsSection
-                selectedBrands={selectedBrands}
-                posts={selectedBrands.reduce((acc, brand) => {
+                } else {
                   acc[brand] = socialData.tiktok[brand]?.posts || [];
-                  return acc;
-                }, {} as Record<Brand, TikTokPost[]>)}
-              />
-            </motion.div>
+                }
+                return acc;
+              }, {} as Record<Brand, InstagramPost[] | TikTokPost[]>)}
+            />
           )}
         </motion.div>
       </div>
+
+      {/* Unified Top Posts Section with Local Platform Toggle */}
+      <motion.div 
+        className={`rounded-lg p-6 mt-6 shadow-md ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        {/* Local platform toggle for Top Posts */}
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Top Posts</h3>
+          <ToggleButtonGroup
+            value={activeTopPostsPlatform}
+            exclusive
+            onChange={(_, newPlatform) => {
+              if (newPlatform) setActiveTopPostsPlatform(newPlatform);
+            }}
+            size="small"
+            aria-label="Platform"
+          >
+            <ToggleButton value="Instagram" aria-label="Instagram">
+              Instagram
+            </ToggleButton>
+            <ToggleButton value="TikTok" aria-label="TikTok">
+              TikTok
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </div>
+        {activeTopPostsPlatform === 'Instagram' ? (
+          <InstagramTopPostsSection
+            selectedBrands={selectedBrands}
+            posts={selectedBrands.reduce((acc, brand) => {
+              acc[brand] = socialData.instagram[brand]?.posts || [];
+              return acc;
+            }, {} as Record<Brand, InstagramPost[]>)}
+          />
+        ) : (
+          <TikTokTopPostsSection
+            selectedBrands={selectedBrands}
+            posts={selectedBrands.reduce((acc, brand) => {
+              acc[brand] = socialData.tiktok[brand]?.posts || [];
+              return acc;
+            }, {} as Record<Brand, TikTokPost[]>)}
+          />
+        )}
+      </motion.div>
     </div>
   );
 }
+
 export default DashboardOverview;
