@@ -48,9 +48,12 @@ interface SentimentAnalysisProps {
   platform: 'Instagram' | 'TikTok';
   selectedBrands: Brand[];
   posts: Record<Brand, InstagramPost[] | TikTokPost[] | undefined>;
+  selectedMonth: string;
+  onPlatformChange: (newPlatform: 'Instagram' | 'TikTok') => void;
+  onMonthChange: React.Dispatch<React.SetStateAction<string>>;
 }
 
-const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ platform, selectedBrands, posts }) => {
+const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ platform, selectedBrands, posts, selectedMonth, onPlatformChange, onMonthChange }) => {
   // State for selected brand in charts
   const [selectedBrandForSentiment, setSelectedBrandForSentiment] = useState<string>('all');
   const [selectedBrandForVolume, setSelectedBrandForVolume] = useState<string>('all');
