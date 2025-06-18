@@ -382,7 +382,7 @@ const EngagementSection: React.FC<EngagementSectionProps> = ({
       {platform === 'Instagram' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
           {/* Instagram Image Engagement Chart */}
-          <div className={`p-4 rounded-lg shadow border-2 border-red-500 ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'} w-full`}>
+          <div className={`p-4 rounded-lg shadow border-2 ${darkMode ? 'bg-gray-700/50 border-gray-600' : 'bg-gray-50 border-gray-200'} w-full`}>
             <h3 className={`text-md font-semibold mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
               Instagram Image Engagement Rate
             </h3>
