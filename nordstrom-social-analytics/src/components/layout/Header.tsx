@@ -34,7 +34,7 @@ const Header: React.FC = () => {
             <span className="text-sm opacity-75">{currentDate}</span>
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             <button
               onClick={toggleDarkMode}
               className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
@@ -42,9 +42,8 @@ const Header: React.FC = () => {
             >
               {darkMode ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
             </button>
-          </div>
-          {/* Export button */}
-          <div className="relative">
+            {/* Export button */}
+            <div className="relative">
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -88,6 +87,7 @@ const Header: React.FC = () => {
               <span className="mr-2">📄</span>
               <span>Export</span>
             </motion.button>
+          </div>
           </div>
         </div>
         </div>

@@ -149,8 +149,54 @@ const DashboardOverview: React.FC = () => {
     }),
   };
 
-  // Calculate total metrics
-  const calculateTotalMetrics = () => {
+  // Define type for the metrics object we'll return
+  interface Metrics {
+    // Nordstrom metrics
+    totalInstagramLikes: number;
+    totalInstagramComments: number;
+    totalInstagramPosts: number;
+    totalTikTokViews: number;
+    totalTikTokLikes: number;
+    totalTikTokShares: number;
+    totalTikTokComments: number;
+    totalTikTokPosts: number;
+    avgInstagramLikes: number;
+    avgInstagramComments: number;
+    instagramEngagementRate: number;
+    instagramImageEngagementRate: number;
+    avgTikTokViews: number;
+    avgTikTokLikes: number;
+    avgTikTokShares: number;
+    avgTikTokComments: number;
+    tikTokEngagementRate: number;
+    
+    // Competitor metrics
+    competitorInstagramLikes: number;
+    competitorInstagramComments: number;
+    competitorInstagramPosts: number;
+    competitorTikTokViews: number;
+    competitorTikTokLikes: number;
+    competitorTikTokShares: number;
+    competitorTikTokComments: number;
+    competitorTikTokPosts: number;
+    competitorAvgInstagramLikes: number;
+    competitorAvgInstagramComments: number;
+    competitorInstagramEngagementRate: number;
+    competitorInstagramImageEngagementRate: number;
+    competitorAvgTikTokViews: number;
+    competitorAvgTikTokLikes: number;
+    competitorAvgTikTokShares: number;
+    competitorAvgTikTokComments: number;
+    competitorTikTokEngagementRate: number;
+    
+    // Other metrics
+    monthlyEngagement: Record<string, { instagram: number; tiktok: number }>;
+    selectedCompetitor: string;
+    bestPlatform: string;
+  }
+
+  // Calculate total metrics function
+  const calculateTotalMetrics = (): Metrics => {
     // Nordstrom metrics
     let totalInstagramLikes = 0;
     let totalInstagramComments = 0;
@@ -178,6 +224,7 @@ const DashboardOverview: React.FC = () => {
     let avgInstagramLikes = 0;
     let avgInstagramComments = 0;
     let instagramEngagementRate = 0;
+    let instagramImageEngagementRate = 0; // Added for image engagement rate
     let avgTikTokViews = 0;
     let avgTikTokLikes = 0;
     let avgTikTokShares = 0;
@@ -188,17 +235,64 @@ const DashboardOverview: React.FC = () => {
     let competitorAvgInstagramLikes = 0;
     let competitorAvgInstagramComments = 0;
     let competitorInstagramEngagementRate = 0;
+    let competitorInstagramImageEngagementRate = 0; // Added for competitor image engagement rate
     let competitorAvgTikTokViews = 0;
     let competitorAvgTikTokLikes = 0;
     let competitorAvgTikTokShares = 0;
     let competitorAvgTikTokComments = 0;
     let competitorTikTokEngagementRate = 0;
 
+    // Define type for the metrics object we'll return
+    interface Metrics {
+      // Nordstrom metrics
+      totalInstagramLikes: number;
+      totalInstagramComments: number;
+      totalInstagramPosts: number;
+      totalTikTokViews: number;
+      totalTikTokLikes: number;
+      totalTikTokShares: number;
+      totalTikTokComments: number;
+      totalTikTokPosts: number;
+      avgInstagramLikes: number;
+      avgInstagramComments: number;
+      instagramEngagementRate: number;
+      instagramImageEngagementRate: number;
+      avgTikTokViews: number;
+      avgTikTokLikes: number;
+      avgTikTokShares: number;
+      avgTikTokComments: number;
+      tikTokEngagementRate: number;
+      
+      // Competitor metrics
+      competitorInstagramLikes: number;
+      competitorInstagramComments: number;
+      competitorInstagramPosts: number;
+      competitorTikTokViews: number;
+      competitorTikTokLikes: number;
+      competitorTikTokShares: number;
+      competitorTikTokComments: number;
+      competitorTikTokPosts: number;
+      competitorAvgInstagramLikes: number;
+      competitorAvgInstagramComments: number;
+      competitorInstagramEngagementRate: number;
+      competitorInstagramImageEngagementRate: number;
+      competitorAvgTikTokViews: number;
+      competitorAvgTikTokLikes: number;
+      competitorAvgTikTokShares: number;
+      competitorAvgTikTokComments: number;
+      competitorTikTokEngagementRate: number;
+      
+      // Other metrics
+      monthlyEngagement: Record<string, { instagram: number; tiktok: number }>;
+      selectedCompetitor: string;
+      bestPlatform: string;
+    }
+
     try {
-      selectedBrands.forEach(brand => {
+      selectedBrands.forEach((brand: Brand) => {
         // Instagram metrics
         const instagramData = socialData.instagram[brand];
-        if (instagramData && instagramData.posts && Array.isArray(instagramData.posts)) {
+        if (instagramData?.posts?.length) {
           // Separate Nordstrom and competitor data
           if (brand === 'Nordstrom') {
             instagramData.posts.forEach(post => {
@@ -316,17 +410,57 @@ const DashboardOverview: React.FC = () => {
     }
 
     // Instagram Video Engagement Rate for Nordstrom
-    const nordstromInstagramVideoPosts = socialData.instagram['Nordstrom']?.posts.filter(p => (p as InstagramPost).mediaType === 'Video') as InstagramPost[] || [];
+    const nordstromInstagramPosts = socialData.instagram['Nordstrom']?.posts || [];
+    
+    // Calculate video engagement rate
+    const nordstromInstagramVideoPosts = nordstromInstagramPosts.filter(
+      (post: InstagramPost) => post.mediaType === 'Video'
+    );
     let nordstromVideoLikes = 0;
     let nordstromVideoComments = 0;
     let nordstromVideoViews = 0;
+    
     if (nordstromInstagramVideoPosts.length > 0) {
-      nordstromVideoLikes = nordstromInstagramVideoPosts.reduce((sum, p) => sum + (p.likesCount || 0), 0);
-      nordstromVideoComments = nordstromInstagramVideoPosts.reduce((sum, p) => sum + (p.commentsCount || 0), 0);
-      nordstromVideoViews = nordstromInstagramVideoPosts.reduce((sum, p) => sum + (p.videoViewCount || 0), 0);
+      nordstromVideoLikes = nordstromInstagramVideoPosts.reduce(
+        (sum: number, p: InstagramPost) => sum + (p.likesCount || 0), 0
+      );
+      nordstromVideoComments = nordstromInstagramVideoPosts.reduce(
+        (sum: number, p: InstagramPost) => sum + (p.commentsCount || 0), 0
+      );
+      nordstromVideoViews = nordstromInstagramVideoPosts.reduce(
+        (sum: number, p: InstagramPost) => sum + (p.videoViewCount || 0), 0
+      );
     }
     const rawNordstromVideoER = nordstromVideoViews > 0 ? ((nordstromVideoLikes + nordstromVideoComments) / nordstromVideoViews) * 100 : 0;
     instagramEngagementRate = parseFloat(rawNordstromVideoER.toFixed(1));
+    
+    // Calculate image engagement rate
+    const nordstromInstagramImagePosts = nordstromInstagramPosts.filter(
+      (post: InstagramPost) => post.mediaType === 'Image' || post.mediaType === 'Photo'
+    );
+    let nordstromImageLikes = 0;
+    let nordstromImageComments = 0;
+    let nordstromImageImpressions = 0;
+    
+    if (nordstromInstagramImagePosts.length > 0) {
+      nordstromImageLikes = nordstromInstagramImagePosts.reduce(
+        (sum: number, p: InstagramPost) => sum + (p.likesCount || 0), 0
+      );
+      nordstromImageComments = nordstromInstagramImagePosts.reduce(
+        (sum: number, p: InstagramPost) => sum + (p.commentsCount || 0), 0
+      );
+      // Using reach or impressions if available, otherwise estimate based on likes
+      nordstromImageImpressions = nordstromInstagramImagePosts.reduce(
+        (sum: number, p: InstagramPost) => {
+          // Estimate reach as 5x likes if no reach data
+          const reach = (p as any).impressions || (p as any).reach || (p.likesCount * 5);
+          return sum + (reach || 0);
+        }, 0
+      );
+    }
+    const rawNordstromImageER = nordstromImageImpressions > 0 ? 
+      ((nordstromImageLikes + nordstromImageComments) / nordstromImageImpressions) * 100 : 0;
+    instagramImageEngagementRate = parseFloat(rawNordstromImageER.toFixed(1));
     
     if (totalTikTokPosts > 0) {
       avgTikTokViews = totalTikTokPosts > 0 ? totalTikTokViews / totalTikTokPosts : 0;
@@ -347,17 +481,61 @@ const DashboardOverview: React.FC = () => {
     }
 
     // Instagram Video Engagement Rate for Competitor
-    const competitorInstagramVideoPosts = socialData.instagram[selectedCompetitor]?.posts.filter(p => (p as InstagramPost).mediaType === 'Video') as InstagramPost[] || [];
+    const competitorInstagramPostsData = socialData.instagram[selectedCompetitor as Brand]?.posts || [];
+    
+    // Calculate video engagement rate for competitor
+    const competitorInstagramVideoPosts = Array.isArray(competitorInstagramPostsData) 
+      ? competitorInstagramPostsData.filter(
+          (post: InstagramPost) => post.mediaType === 'Video'
+        )
+      : [];
     let competitorVideoLikes = 0;
     let competitorVideoComments = 0;
     let competitorVideoViews = 0;
+    
     if (competitorInstagramVideoPosts.length > 0) {
-      competitorVideoLikes = competitorInstagramVideoPosts.reduce((sum, p) => sum + (p.likesCount || 0), 0);
-      competitorVideoComments = competitorInstagramVideoPosts.reduce((sum, p) => sum + (p.commentsCount || 0), 0);
-      competitorVideoViews = competitorInstagramVideoPosts.reduce((sum, p) => sum + (p.videoViewCount || 0), 0);
+      competitorVideoLikes = competitorInstagramVideoPosts.reduce(
+        (sum: number, p: InstagramPost) => sum + (p.likesCount || 0), 0
+      );
+      competitorVideoComments = competitorInstagramVideoPosts.reduce(
+        (sum: number, p: InstagramPost) => sum + (p.commentsCount || 0), 0
+      );
+      competitorVideoViews = competitorInstagramVideoPosts.reduce(
+        (sum: number, p: InstagramPost) => sum + (p.videoViewCount || 0), 0
+      );
     }
     const rawCompetitorVideoER = competitorVideoViews > 0 ? ((competitorVideoLikes + competitorVideoComments) / competitorVideoViews) * 100 : 0;
     competitorInstagramEngagementRate = parseFloat(rawCompetitorVideoER.toFixed(1));
+    
+    // Calculate image engagement rate for competitor
+    const competitorInstagramImagePosts = Array.isArray(competitorInstagramPostsData)
+      ? competitorInstagramPostsData.filter(
+          (post: InstagramPost) => post.mediaType === 'Image' || post.mediaType === 'Photo'
+        )
+      : [];
+    let competitorImageLikes = 0;
+    let competitorImageComments = 0;
+    let competitorImageImpressions = 0;
+    
+    if (competitorInstagramImagePosts.length > 0) {
+      competitorImageLikes = competitorInstagramImagePosts.reduce(
+        (sum: number, p: InstagramPost) => sum + (p.likesCount || 0), 0
+      );
+      competitorImageComments = competitorInstagramImagePosts.reduce(
+        (sum: number, p: InstagramPost) => sum + (p.commentsCount || 0), 0
+      );
+      // Using reach or impressions if available, otherwise estimate based on likes
+      competitorImageImpressions = competitorInstagramImagePosts.reduce(
+        (sum: number, p: InstagramPost) => {
+          // Estimate reach as 5x likes if no reach data
+          const reach = (p as any).impressions || (p as any).reach || (p.likesCount * 5);
+          return sum + (reach || 0);
+        }, 0
+      );
+    }
+    const rawCompetitorImageER = competitorImageImpressions > 0 ? 
+      ((competitorImageLikes + competitorImageComments) / competitorImageImpressions) * 100 : 0;
+    competitorInstagramImageEngagementRate = parseFloat(rawCompetitorImageER.toFixed(1));
     
     if (competitorTikTokPosts > 0) {
       competitorAvgTikTokViews = competitorTikTokPosts > 0 ? competitorTikTokViews / competitorTikTokPosts : 0;
@@ -380,6 +558,7 @@ const DashboardOverview: React.FC = () => {
       avgInstagramLikes,
       avgInstagramComments,
       instagramEngagementRate,
+      instagramImageEngagementRate, // Added image engagement rate
       avgTikTokViews,
       avgTikTokLikes,
       avgTikTokShares,
@@ -398,6 +577,7 @@ const DashboardOverview: React.FC = () => {
       competitorAvgInstagramLikes,
       competitorAvgInstagramComments,
       competitorInstagramEngagementRate,
+      competitorInstagramImageEngagementRate, // Added competitor image engagement rate
       competitorAvgTikTokViews,
       competitorAvgTikTokLikes,
       competitorAvgTikTokShares,
@@ -412,9 +592,10 @@ const DashboardOverview: React.FC = () => {
       bestPlatform: totalInstagramPosts && totalTikTokPosts ? 
         instagramEngagementRate > tikTokEngagementRate ? 'Instagram' : 'TikTok' : 'Unknown',
     };
+    return metrics;
   };
 
-  const metrics = calculateTotalMetrics();
+  const metrics: Metrics = calculateTotalMetrics();
 
 
 
@@ -953,7 +1134,7 @@ const DashboardOverview: React.FC = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
             {/* Instagram KPIs */}
             {(filterOptions.platform === 'Instagram' || filterOptions.platform === 'All') && (
               <>
@@ -973,8 +1154,93 @@ const DashboardOverview: React.FC = () => {
                     <FaIcons.FaInstagram className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
                   </div>
                   
+                  
+                </motion.div>
+                
+                {/* Total Likes */}
+                <motion.div
+                  custom={1}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Likes</p>
+                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{formatNumber(metrics.totalInstagramLikes)}</h3>
+                    </div>
+                    <AiIcons.AiFillHeart className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
+                  </div>
+                  
+                  
+                </motion.div>
+                
+                {/* Total Comments */}
+                <motion.div
+                  custom={2}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Comments</p>
+                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{formatNumber(metrics.totalInstagramComments)}</h3>
+                    </div>
+                    <FaIcons.FaComments className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
+                  </div>
+                  
+                  
+                </motion.div>
+                
+                {/* Video Engagement Rate */}
+                <motion.div
+                  custom={3}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Vid Engagement Rate</p>
+                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{metrics.instagramEngagementRate?.toFixed(2)}%</h3>
+                    </div>
+                    <AiIcons.AiOutlineInteraction className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
+                  </div>
+                </motion.div>
+
+                {/* Image Engagement Rate */}
+                <motion.div
+                  custom={4}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Img Engagement Rate</p>
+                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{metrics.instagramImageEngagementRate?.toFixed(2)}%</h3>
+                    </div>
+                    <FaIcons.FaImage className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
+                  </div>
+                </motion.div>
+
+
+                {/* Total Posts */}
+                <motion.div
+                  custom={0}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
                   {/* Posts Comparison Chart */}
-                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                  <h4 className="text-md font-semibold text-center mb-2 text-gray-700 dark:text-gray-200">Posts Comparison</h4>
+                  <div className="mt-2 h-60 w-full flex items-center justify-center">
                     <Bar
                       data={{
                         labels: ['Nordstrom', metrics.selectedCompetitor],
@@ -982,7 +1248,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Posts',
                           data: [metrics.totalInstagramPosts, metrics.competitorInstagramPosts],
                           backgroundColor: [
-                            'rgba(255, 140, 0, 0.85)',
+                            'rgba(255, 76, 12, 1)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1009,16 +1275,11 @@ const DashboardOverview: React.FC = () => {
                   animate="visible"
                   className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Likes</p>
-                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{formatNumber(metrics.totalInstagramLikes)}</h3>
-                    </div>
-                    <AiIcons.AiFillHeart className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
-                  </div>
+                  
                   
                   {/* Likes Comparison Chart */}
-                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                  <h4 className="text-md font-semibold text-center mb-2 text-gray-700 dark:text-gray-200">Likes Comparison</h4>
+                  <div className="mt-2 h-60 w-full flex items-center justify-center">
                     <Bar
                       data={{
                         labels: ['Nordstrom', metrics.selectedCompetitor],
@@ -1026,7 +1287,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Likes',
                           data: [metrics.totalInstagramLikes, metrics.competitorInstagramLikes],
                           backgroundColor: [
-                            'rgba(255, 140, 0, 0.85)',
+                            'rgba(255, 76, 12, 1)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1053,16 +1314,11 @@ const DashboardOverview: React.FC = () => {
                   animate="visible"
                   className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Comments</p>
-                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{formatNumber(metrics.totalInstagramComments)}</h3>
-                    </div>
-                    <FaIcons.FaComments className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
-                  </div>
+                  
                   
                   {/* Comments Comparison Chart */}
-                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                  <h4 className="text-md font-semibold text-center mb-2 text-gray-700 dark:text-gray-200">Comments Comparison</h4>
+                  <div className="mt-2 h-60 w-full flex items-center justify-center">
                     <Bar
                       data={{
                         labels: ['Nordstrom', metrics.selectedCompetitor],
@@ -1070,7 +1326,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Comments',
                           data: [metrics.totalInstagramComments, metrics.competitorInstagramComments],
                           backgroundColor: [
-                            'rgba(255, 140, 0, 0.85)',
+                            'rgba(255, 76, 12, 1)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1089,7 +1345,7 @@ const DashboardOverview: React.FC = () => {
                   </div>
                 </motion.div>
                 
-                {/* Engagement Rate */}
+                {/* Video Engagement Rate */}
                 <motion.div
                   custom={3}
                   variants={cardVariants}
@@ -1097,16 +1353,9 @@ const DashboardOverview: React.FC = () => {
                   animate="visible"
                   className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Engagement Rate</p>
-                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{metrics.instagramEngagementRate?.toFixed(2)}%</h3>
-                    </div>
-                    <AiIcons.AiOutlineInteraction className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
-                  </div>
                   
-                  {/* Engagement Rate Comparison Chart */}
-                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                  <h4 className="text-md font-semibold text-center mb-2 text-gray-700 dark:text-gray-200">Video Comparison</h4>
+                  <div className="mt-2 h-60 w-full flex items-center justify-center">
                     <Bar
                       data={{
                         labels: ['Nordstrom', metrics.selectedCompetitor],
@@ -1114,7 +1363,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Engagement Rate',
                           data: [metrics.instagramEngagementRate, metrics.competitorInstagramEngagementRate],
                           backgroundColor: [
-                            'rgba(255, 140, 0, 0.85)',
+                            'rgba(255, 76, 12, 1)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1132,6 +1381,45 @@ const DashboardOverview: React.FC = () => {
                     />
                   </div>
                 </motion.div>
+
+                {/* Image Engagement Rate */}
+                <motion.div
+                  custom={3}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  
+                  <h4 className="text-md font-semibold text-center mb-2 text-gray-700 dark:text-gray-200">Image Comparison</h4>
+                  <div className="mt-2 h-60 w-full flex items-center justify-center">
+                    <Bar
+                      data={{
+                        labels: ['Nordstrom', metrics.selectedCompetitor],
+                        datasets: [{
+                          label: 'Engagement Rate',
+                          data: [metrics.instagramImageEngagementRate, metrics.competitorInstagramImageEngagementRate],
+                          backgroundColor: [
+                            'rgba(255, 76, 12, 1)',
+                            'rgba(156, 163, 175, 0.7)'
+                          ]
+                        }]
+                      }}
+                      options={{
+                        plugins: { legend: { display: false } },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                          x: { ticks: { color: darkMode ? 'white' : 'black' } },
+                          y: { beginAtZero: true, ticks: { color: darkMode ? 'white' : 'black' } }
+                        }
+                      }}
+                      height={180}
+                    />
+                  </div>
+                </motion.div>
+                
+                {/* Ig charts */}
                 <motion.div
                   custom={3}
                   variants={cardVariants}
@@ -1175,8 +1463,98 @@ const DashboardOverview: React.FC = () => {
                     <FaIcons.FaTiktok className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
                   </div>
                   
+                 
+                </motion.div>
+                
+                {/* Total Likes */}
+                <motion.div
+                  custom={5}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Likes</p>
+                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{formatNumber(metrics.totalTikTokLikes)}</h3>
+                    </div>
+                    <AiIcons.AiFillHeart className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
+                  </div>
+                  
+                  
+                </motion.div>
+
+                {/* Total Comments */}
+                <motion.div
+                  custom={6}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Comments</p>
+                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{formatNumber(metrics.totalTikTokComments)}</h3>
+                    </div>
+                    <FaIcons.FaComments className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
+                  </div>
+                  
+                  
+                </motion.div>
+                
+                {/* Total Shares */}
+                <motion.div
+                  custom={6}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Shares</p>
+                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{formatNumber(metrics.totalTikTokShares)}</h3>
+                    </div>
+                    <FaIcons.FaShareSquare className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
+                  </div>
+                  
+                  
+                </motion.div>
+                
+                {/* Engagement Rate */}
+                <motion.div
+                  custom={7}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Engagement Rate</p>
+                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{metrics.tikTokEngagementRate?.toFixed(2)}%</h3>
+                    </div>
+                    <AiIcons.AiOutlineInteraction className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
+                  </div>
+                  
+                 
+                </motion.div>
+
+                {/* Total Posts */}
+                <motion.div
+                  custom={4}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                >
+                  
+                  
                   {/* Posts Comparison Chart */}
-                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                  <h4 className="text-md font-semibold text-center mb-2 text-gray-700 dark:text-gray-200">Posts Comparison</h4>
+                  <div className="mt-2 h-60 w-full flex items-center justify-center">
                     <Bar
                       data={{
                         labels: ['Nordstrom', metrics.selectedCompetitor],
@@ -1184,7 +1562,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Posts',
                           data: [metrics.totalTikTokPosts, metrics.competitorTikTokPosts],
                           backgroundColor: [
-                            'rgba(255, 140, 0, 0.85)',
+                            'rgba(255, 76, 12, 1)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1211,16 +1589,11 @@ const DashboardOverview: React.FC = () => {
                   animate="visible"
                   className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Likes</p>
-                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{formatNumber(metrics.totalTikTokLikes)}</h3>
-                    </div>
-                    <AiIcons.AiFillHeart className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
-                  </div>
+                  
                   
                   {/* Likes Comparison Chart */}
-                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                  <h4 className="text-md font-semibold text-center mb-2 text-gray-700 dark:text-gray-200">Likes Comparison</h4>
+                  <div className="mt-2 h-60 w-full flex items-center justify-center">
                     <Bar
                       data={{
                         labels: ['Nordstrom', metrics.selectedCompetitor],
@@ -1228,7 +1601,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Likes',
                           data: [metrics.totalTikTokLikes, metrics.competitorTikTokLikes],
                           backgroundColor: [
-                            'rgba(255, 140, 0, 0.85)',
+                            'rgba(255, 76, 12, 1)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1255,16 +1628,9 @@ const DashboardOverview: React.FC = () => {
                   animate="visible"
                   className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Comments</p>
-                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{formatNumber(metrics.totalTikTokComments)}</h3>
-                    </div>
-                    <FaIcons.FaComments className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
-                  </div>
-                  
                   {/* Comments Comparison Chart */}
-                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                  <h4 className="text-md font-semibold text-center mb-2 text-gray-700 dark:text-gray-200">Comments Comparison</h4>
+                  <div className="mt-2 h-60 w-full flex items-center justify-center">
                     <Bar
                       data={{
                         labels: ['Nordstrom', metrics.selectedCompetitor],
@@ -1272,7 +1638,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Comments',
                           data: [metrics.totalTikTokComments, metrics.competitorTikTokComments],
                           backgroundColor: [
-                            'rgba(255, 140, 0, 0.85)',
+                            'rgba(255, 76, 12, 1)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1299,16 +1665,9 @@ const DashboardOverview: React.FC = () => {
                   animate="visible"
                   className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Shares</p>
-                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{formatNumber(metrics.totalTikTokShares)}</h3>
-                    </div>
-                    <FaIcons.FaShareSquare className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
-                  </div>
-                  
                   {/* Shares Comparison Chart */}
-                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                  <h4 className="text-md font-semibold text-center mb-2 text-gray-700 dark:text-gray-200">Shares Comparison</h4>
+                  <div className="mt-2 h-60 w-full flex items-center justify-center">
                     <Bar
                       data={{
                         labels: ['Nordstrom', metrics.selectedCompetitor],
@@ -1316,7 +1675,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Shares',
                           data: [metrics.totalTikTokShares, metrics.competitorTikTokShares],
                           backgroundColor: [
-                            'rgba(255, 140, 0, 0.85)',
+                            'rgba(255, 76, 12, 1)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1343,16 +1702,8 @@ const DashboardOverview: React.FC = () => {
                   animate="visible"
                   className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Engagement Rate</p>
-                      <h3 className="text-3xl font-bold text-nordstrom-blue mt-1">{metrics.tikTokEngagementRate?.toFixed(2)}%</h3>
-                    </div>
-                    <AiIcons.AiOutlineInteraction className="text-3xl text-nordstrom-blue/70 dark:text-nordstrom-blue/60" />
-                  </div>
-                  
-                  {/* Engagement Rate Comparison Chart */}
-                  <div className="mt-4 h-64 w-full flex items-center justify-center">
+                  <h4 className="text-md font-semibold text-center mb-2 text-gray-700 dark:text-gray-200">Eng Rate Comparison</h4>
+                  <div className="mt-2 h-60 w-full flex items-center justify-center">
                     <Bar
                       data={{
                         labels: ['Nordstrom', metrics.selectedCompetitor],
@@ -1360,7 +1711,7 @@ const DashboardOverview: React.FC = () => {
                           label: 'Engagement Rate',
                           data: [metrics.tikTokEngagementRate, metrics.competitorTikTokEngagementRate],
                           backgroundColor: [
-                            'rgba(255, 140, 0, 0.85)',
+                            'rgba(255, 76, 12, 1)',
                             'rgba(156, 163, 175, 0.7)'
                           ]
                         }]
@@ -1378,6 +1729,7 @@ const DashboardOverview: React.FC = () => {
                     />
                   </div>
                 </motion.div>
+                
                  {/* Engagement Rate */}
                  <motion.div
                   custom={7}
@@ -1386,8 +1738,7 @@ const DashboardOverview: React.FC = () => {
                   animate="visible"
                   className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 col-span-1 md:col-span-2"
                 >
-                  
-                  
+
                   {/* TikTok Engagement Analytics */}
           {filterOptions.platform === 'TikTok' && (
             <EngagementSection 

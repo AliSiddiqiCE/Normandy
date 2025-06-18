@@ -234,8 +234,8 @@ const EngagementSection: React.FC<EngagementSectionProps> = ({
             {
               label: 'Overall Engagement Rate (%)',
               data: totalPeriodAggregatedER.map(data => data.engagementRate),
-              backgroundColor: 'rgba(255, 140, 0, 0.8)',
-              borderColor: 'rgba(255, 140, 0, 1)',
+              backgroundColor: 'rgba(255, 76, 12, 1)',
+              borderColor: 'rgba(255, 76, 12, 1)',
               borderWidth: 1,
             },
           ],
@@ -278,8 +278,8 @@ const EngagementSection: React.FC<EngagementSectionProps> = ({
             {
               label: `Engagement Rate (%) - ${filterOptions?.selectedMonth || ''}`,
               data: monthlyAggregatedER.map(data => data.engagementRate),
-              backgroundColor: 'rgba(255, 140, 0, 0.8)',
-              borderColor: 'rgba(255, 140, 0, 1)',
+              backgroundColor: 'rgba(255, 76, 12, 1)',
+              borderColor: 'rgba(255, 76, 12, 1)',
               borderWidth: 1,
             },
           ],
@@ -395,7 +395,7 @@ const EngagementSection: React.FC<EngagementSectionProps> = ({
                     ...instagramImageEngagementData,
                     datasets: instagramImageEngagementData.datasets.map(ds => ({
                       ...ds,
-                      backgroundColor: 'rgba(255, 140, 0, 0.85)'
+                      backgroundColor: 'rgba(255, 76, 12, 1)'
                     }))
                   }}
                   options={commonChartOptions as ChartOptions<'bar'>}
@@ -417,7 +417,7 @@ const EngagementSection: React.FC<EngagementSectionProps> = ({
                     ...videoEngagementData,
                     datasets: videoEngagementData.datasets.map(ds => ({
                       ...ds,
-                      backgroundColor: 'rgba(255, 140, 0, 0.85)'
+                      backgroundColor: 'rgba(255, 76, 12, 1)'
                     }))
                   }}
                   options={commonChartOptions as ChartOptions<'bar'>}
