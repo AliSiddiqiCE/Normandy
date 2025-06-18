@@ -1736,7 +1736,7 @@ const DashboardOverview: React.FC = () => {
                   variants={cardVariants}
                   initial="hidden"
                   animate="visible"
-                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 col-span-1 md:col-span-2"
+                  className="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 col-span-1 md:col-span-5"
                 >
 
                   {/* TikTok Engagement Analytics */}
