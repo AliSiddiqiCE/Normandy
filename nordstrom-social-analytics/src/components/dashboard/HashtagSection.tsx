@@ -12,7 +12,7 @@ import {
 } from 'chart.js';
 import { Brand, InstagramPost, TikTokPost, SocialPlatform } from '../../types';
 import EmptyChartFallback from '../common/EmptyChartFallback';
-import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { useSocialData } from '../../context/SocialDataContext';
 
 // Register ChartJS components
@@ -32,12 +32,64 @@ type HashtagSectionProps = {
 };
 
 const HashtagSection: React.FC<HashtagSectionProps> = ({ 
-  platform, 
+  platform: initialPlatform, 
   selectedBrands, 
   posts 
 }) => {
-  // Get dark mode from context
   const { darkMode } = useSocialData();
+  // Local platform state for hashtag analysis
+  const [localPlatform, setLocalPlatform] = useState<'Instagram' | 'TikTok'>(initialPlatform);
+  
+  // Filter posts based on the selected platform
+  const filteredPosts = useMemo(() => {
+    const result: Record<Brand, (InstagramPost | TikTokPost)[]> = {
+      Nordstrom: [], 
+      Macys: [], 
+      Saks: [], 
+      Bloomingdales: [], 
+      Tjmaxx: [], 
+      Sephora: [], 
+      Ulta: [], 
+      Aritzia: [], 
+      "American Eagle": [], 
+      Walmart: [], 
+      "Amazon Beauty": [], 
+      Revolve: []
+    };
+
+    selectedBrands.forEach(brand => {
+      if (!posts[brand]) return;
+      
+      const brandPosts = Array.isArray(posts[brand]) ? posts[brand] : [];
+      if (brandPosts.length === 0) return;
+      
+      if (localPlatform === 'Instagram') {
+        result[brand] = brandPosts.filter((post): post is InstagramPost => {
+          const isInstagram = 'mediaType' in post;
+          const hasHashtags = isInstagram && Array.isArray((post as InstagramPost).hashtags);
+          return isInstagram && hasHashtags;
+        });
+      } else {
+        result[brand] = brandPosts.filter((post): post is TikTokPost => {
+          const isTikTok = 'playCount' in post;
+          if (!isTikTok) return false;
+          
+          const tiktokPost = post as TikTokPost;
+          const hasValidHashtags = Array.isArray(tiktokPost.hashtags) && 
+                                 tiktokPost.hashtags.some(tag => tag?.name);
+          
+          return hasValidHashtags;
+        });
+      }
+    });
+
+    return result;
+  }, [posts, selectedBrands, localPlatform]);
+  
+  // Update local platform if prop changes
+  React.useEffect(() => {
+    setLocalPlatform(initialPlatform);
+  }, [initialPlatform]);
   // Warm color palette that matches the website's aesthetic
   const vibrantColors = [
     'rgba(194, 124, 14, 0.8)',   // Warm Gold
@@ -62,37 +114,45 @@ const HashtagSection: React.FC<HashtagSectionProps> = ({
 
   // Check if we have data
   const hasData = useMemo(() => {
-    return selectedBrands.some(brand => (posts[brand]?.length || 0) > 0);
-  }, [selectedBrands, posts]);
+    return selectedBrands.some(brand => (filteredPosts[brand]?.length || 0) > 0);
+  }, [selectedBrands, filteredPosts]);
 
   // Extract hashtags for a specific brand
   const extractHashtags = (brand: Brand) => {
-    const brandPosts = posts[brand] || [];
+    const brandPosts = filteredPosts[brand] || [];
     const hashtagCounts: Record<string, number> = {};
     
     brandPosts.forEach(post => {
-      if (platform === 'Instagram') {
+      if (localPlatform === 'Instagram') {
         const instagramPost = post as InstagramPost;
-        if (instagramPost.hashtags && instagramPost.hashtags.length) {
+        if (instagramPost.hashtags?.length) {
           instagramPost.hashtags.forEach(tag => {
             if (tag) {
-              hashtagCounts[tag.toLowerCase()] = (hashtagCounts[tag.toLowerCase()] || 0) + 1;
+              const tagName = tag.startsWith('#') ? tag.slice(1) : tag;
+              const lowerTag = tagName.toLowerCase().trim();
+              if (lowerTag) {
+                hashtagCounts[lowerTag] = (hashtagCounts[lowerTag] || 0) + 1;
+              }
             }
           });
         }
       } else {
-        const tiktokPost = post as TikTokPost;
-        if (tiktokPost.hashtags && tiktokPost.hashtags.length) {
-          tiktokPost.hashtags.forEach(tag => {
-            if (tag.name) {
-              hashtagCounts[tag.name.toLowerCase()] = (hashtagCounts[tag.name.toLowerCase()] || 0) + 1;
+        const instagramPost = post as InstagramPost;
+        if (instagramPost.hashtags?.length) {
+          instagramPost.hashtags.forEach(tag => {
+            if (tag) {
+              const tagName = tag.startsWith('#') ? tag.slice(1) : tag;
+              const lowerTag = tagName.toLowerCase().trim();
+              if (lowerTag) {
+                hashtagCounts[lowerTag] = (hashtagCounts[lowerTag] || 0) + 1;
+              }
             }
           });
         }
       }
     });
     
-    // Sort hashtags by count and get top 5
+    // Sort hashtags by count (descending) and get top 5
     return Object.entries(hashtagCounts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5);
@@ -100,7 +160,7 @@ const HashtagSection: React.FC<HashtagSectionProps> = ({
 
   // Generate top hashtags chart data for Nordstrom
   const nordstromHashtagsData = useMemo(() => {
-    if (!hasData || !posts[mainBrand] || posts[mainBrand].length === 0) {
+    if (!hasData || !filteredPosts[mainBrand] || filteredPosts[mainBrand].length === 0) {
       return {
         labels: [],
         datasets: []
@@ -121,11 +181,11 @@ const HashtagSection: React.FC<HashtagSectionProps> = ({
         }
       ]
     };
-  }, [posts, mainBrand, hasData, platform, vibrantColors]);
+  }, [filteredPosts, mainBrand, hasData, localPlatform, vibrantColors]);
 
   // Generate top hashtags chart data for competitor
   const competitorHashtagsData = useMemo(() => {
-    if (!hasData || !posts[selectedCompetitor] || posts[selectedCompetitor].length === 0) {
+    if (!hasData || !filteredPosts[selectedCompetitor] || filteredPosts[selectedCompetitor].length === 0) {
       return {
         labels: [],
         datasets: []
@@ -146,7 +206,7 @@ const HashtagSection: React.FC<HashtagSectionProps> = ({
         }
       ]
     };
-  }, [posts, selectedCompetitor, hasData, platform, vibrantColors]);
+  }, [filteredPosts, selectedCompetitor, hasData, localPlatform, vibrantColors]);
 
   // Chart options
   const barOptions: ChartOptions<'bar'> = {
@@ -232,9 +292,45 @@ const HashtagSection: React.FC<HashtagSectionProps> = ({
 
   return (
     // Removed p-4 from root, padding is handled by parent card in DashboardOverview
-    <div>
+    <div className={darkMode ? 'text-white' : ''}>
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-2 md:gap-0">
+        <h3 className="text-lg font-semibold">Hashtag Analysis</h3>
+        <div className="flex items-center gap-4">
+          <ToggleButtonGroup
+            value={localPlatform}
+            exclusive
+            onChange={(_event: React.MouseEvent<HTMLElement>, newPlatform: 'Instagram' | 'TikTok' | null) => {
+              if (newPlatform) setLocalPlatform(newPlatform);
+            }}
+            size="small"
+            aria-label="Platform"
+            sx={{
+              backgroundColor: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)',
+              borderRadius: 2,
+              '& .MuiToggleButton-root': {
+                color: darkMode ? 'rgba(255,255,255,0.8)' : 'rgba(55,65,81,1)',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                px: 2.5,
+                py: 1,
+                '&.Mui-selected': {
+                  backgroundColor: darkMode ? 'rgba(0, 120, 212, 0.3)' : 'rgba(0, 120, 212, 0.12)',
+                  color: darkMode ? '#fff' : '#00539b',
+                },
+              },
+            }}
+          >
+            <ToggleButton value="Instagram" aria-label="Instagram" sx={{ textTransform: 'none' }}>
+              Instagram
+            </ToggleButton>
+            <ToggleButton value="TikTok" aria-label="TikTok" sx={{ textTransform: 'none' }}>
+              TikTok
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </div>
+      </div>
       <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-6`}>
-        Top 5 hashtags used by brands on {platform}.
+        Top 5 hashtags used by brands on {localPlatform}.
       </p>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -259,7 +355,7 @@ const HashtagSection: React.FC<HashtagSectionProps> = ({
             const brandPosts = posts[mainBrand] || [];
             const hashtagCounts: Record<string, number> = {};
             brandPosts.forEach(post => {
-              if (platform === 'Instagram') {
+              if (localPlatform === 'Instagram') {
                 const instagramPost = post as InstagramPost;
                 if (instagramPost.hashtags && instagramPost.hashtags.length) {
                   instagramPost.hashtags.forEach(tag => {
@@ -368,7 +464,7 @@ const HashtagSection: React.FC<HashtagSectionProps> = ({
             const brandPosts = posts[selectedCompetitor] || [];
             const hashtagCounts: Record<string, number> = {};
             brandPosts.forEach(post => {
-              if (platform === 'Instagram') {
+              if (localPlatform === 'Instagram') {
                 const instagramPost = post as InstagramPost;
                 if (instagramPost.hashtags && instagramPost.hashtags.length) {
                   instagramPost.hashtags.forEach(tag => {
