@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useSocialData } from '../../context/SocialDataContext';
 import { Bar, Line, Pie, Chart } from 'react-chartjs-2';
 import { 
   Chart as ChartJS, 
@@ -16,7 +17,7 @@ import {
 import { Brand, InstagramPost, SentimentLabel, TikTokPost } from '../../types';
 import { BRAND_COLORS, getColorByBrand, generateColors } from '../../utils/chartUtils';
 import EmptyChartFallback from '../../components/common/EmptyChartFallback';
-import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, ToggleButton, ToggleButtonGroup } from '@mui/material';
 
 // Register ChartJS components
 ChartJS.register(
@@ -45,12 +46,62 @@ ChartJS.register({
 });
 
 interface SentimentAnalysisProps {
-  platform: 'Instagram' | 'TikTok';
   selectedBrands: Brand[];
-  posts: Record<Brand, InstagramPost[] | TikTokPost[] | undefined>;
-}
+  posts: Record<Brand, (InstagramPost | TikTokPost)[] | undefined>;
+} 
 
-const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ platform, selectedBrands, posts }) => {
+const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ selectedBrands, posts }) => {
+  const { darkMode } = useSocialData();
+  // Local month state for sentiment analysis
+  const [selectedMonth, setSelectedMonth] = useState<string>('All (Feb-May)');
+  // Local platform state for sentiment analysis
+  const [localPlatform, setLocalPlatform] = useState<'Instagram' | 'TikTok'>('Instagram');
+
+  // Compute filtered posts for the selected platform only
+  const filteredPosts = useMemo(() => {
+    // Helper to match month
+    const matchesMonth = (date: Date) => {
+      if (selectedMonth === 'All (Feb-May)') return true;
+      const monthName = date.toLocaleString('default', { month: 'long' });
+      return monthName === selectedMonth;
+    };
+    // Initialize with all Brand keys for type safety
+    const out: Record<Brand, InstagramPost[] | TikTokPost[]> = {
+      Nordstrom: [], Macys: [], Saks: [], Bloomingdales: [], Tjmaxx: [], Sephora: [], Ulta: [], Aritzia: [], "American Eagle": [], Walmart: [], "Amazon Beauty": [], Revolve: []
+    };
+    selectedBrands.forEach(brand => {
+      const brandPosts = posts[brand] || [];
+      if (localPlatform === 'Instagram') {
+        out[brand] = (brandPosts as (InstagramPost | TikTokPost)[]).filter(
+          (post): post is InstagramPost => {
+            if ((post as InstagramPost).mediaType === undefined) return false;
+            if (selectedMonth === 'All (Feb-May)') return true;
+            const ts = (post as InstagramPost).timestamp;
+            if (!ts) return false;
+            const date = new Date(ts);
+            return matchesMonth(date);
+          }
+        );
+      } else {
+        out[brand] = (brandPosts as (InstagramPost | TikTokPost)[]).filter(
+          (post): post is TikTokPost => {
+            if ((post as TikTokPost).playCount === undefined) return false;
+            if (selectedMonth === 'All (Feb-May)') return true;
+            const ct = (post as TikTokPost).createTime;
+            if (!ct) return false;
+            let date: Date;
+            if (typeof ct === 'number' || !isNaN(Number(ct))) {
+              date = new Date(Number(ct) * 1000);
+            } else {
+              date = new Date(ct as string);
+            }
+            return matchesMonth(date);
+          }
+        );
+      }
+    });
+    return out;
+  }, [selectedBrands, posts, localPlatform, selectedMonth]);
   // State for selected brand in charts
   const [selectedBrandForSentiment, setSelectedBrandForSentiment] = useState<string>('all');
   const [selectedBrandForVolume, setSelectedBrandForVolume] = useState<string>('all');
@@ -61,57 +112,54 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ platform, selecte
   // Nordstrom is our main brand
   const mainBrand: Brand = 'Nordstrom';
 
+  // Use local platform state throughout instead of prop
+  const platform = localPlatform;
+
   // Calculate sentiment distribution by brand
   const sentimentDistributionByBrand = useMemo(() => {
+    // Prepare data for Chart.js bar chart: brands on x-axis, sentiment counts in grouped bars
     const labels = selectedBrands;
-    const positive: number[] = [];
-    const neutral: number[] = [];
-    const negative: number[] = [];
-    
-    selectedBrands.forEach(brand => {
-      const brandPosts = posts[brand] || [];
-      let posCount = 0;
-      let neuCount = 0;
-      let negCount = 0;
-      
-      brandPosts.forEach(post => {
-        if (post.sentimentLabel === 'positive') posCount++;
-        else if (post.sentimentLabel === 'neutral') neuCount++;
-        else if (post.sentimentLabel === 'negative') negCount++;
+    const positives: number[] = [];
+    const neutrals: number[] = [];
+    const negatives: number[] = [];
+    labels.forEach(brand => {
+      let pos = 0, neu = 0, neg = 0;
+      (filteredPosts[brand] || []).forEach(post => {
+        if (post.sentimentLabel === 'positive') pos++;
+        else if (post.sentimentLabel === 'neutral') neu++;
+        else if (post.sentimentLabel === 'negative') neg++;
       });
-      
-      positive.push(posCount);
-      neutral.push(neuCount);
-      negative.push(negCount);
+      positives.push(pos);
+      neutrals.push(neu);
+      negatives.push(neg);
     });
-    
     return {
       labels,
       datasets: [
         {
           label: 'Positive',
-          data: positive,
-          backgroundColor: 'rgba(75, 192, 75, 0.8)', // Green for positive
+          data: positives,
+          backgroundColor: 'rgba(75, 192, 75, 0.8)',
           borderColor: 'rgba(75, 192, 75, 1)',
           borderWidth: 1,
         },
         {
           label: 'Neutral',
-          data: neutral,
-          backgroundColor: 'rgba(150, 150, 150, 0.8)', // Gray for neutral
+          data: neutrals,
+          backgroundColor: 'rgba(150, 150, 150, 0.8)',
           borderColor: 'rgba(150, 150, 150, 1)',
           borderWidth: 1,
         },
         {
           label: 'Negative',
-          data: negative,
-          backgroundColor: 'rgba(255, 99, 132, 0.8)', // Red for negative
+          data: negatives,
+          backgroundColor: 'rgba(255, 99, 132, 0.8)',
           borderColor: 'rgba(255, 99, 132, 1)',
           borderWidth: 1,
         }
       ]
     };
-  }, [selectedBrands, posts]);
+  }, [selectedBrands, filteredPosts]);
 
   // Calculate average sentiment score over time by brand
   const averageSentimentOverTimeByBrand = useMemo(() => {
@@ -133,7 +181,7 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ platform, selecte
     };
     
     selectedBrands.forEach(brand => {
-      const brandPosts = posts[brand] || [];
+      const brandPosts = filteredPosts[brand] || [];
       brandScoresByDate[brand] = {};
       
       brandPosts.forEach(post => {
@@ -195,7 +243,7 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ platform, selecte
       labels: dates,
       datasets
     };
-  }, [selectedBrands, posts, platform, selectedBrandForSentiment]);
+  }, [selectedBrands, filteredPosts, platform, selectedBrandForSentiment]);
 
   // Function to calculate sentiment distribution for a specific brand
   const calculateSentimentDistribution = (brand: Brand) => {
@@ -203,7 +251,7 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ platform, selecte
     let neutral = 0;
     let negative = 0;
     
-    const brandPosts = posts[brand] || [];
+    const brandPosts = filteredPosts[brand] || [];
     
     brandPosts.forEach(post => {
       if (post.sentimentLabel === 'positive') positive++;
@@ -235,17 +283,17 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ platform, selecte
   // Calculate sentiment distribution for Nordstrom (main brand)
   const nordstromSentimentDistribution = useMemo(() => {
     return calculateSentimentDistribution(mainBrand);
-  }, [posts, mainBrand]);
+  }, [filteredPosts, mainBrand]);
   
   // Calculate sentiment distribution for selected competitor
   const competitorSentimentDistribution = useMemo(() => {
     return calculateSentimentDistribution(selectedCompetitor);
-  }, [posts, selectedCompetitor]);
+  }, [filteredPosts, selectedCompetitor]);
   
   // Function to calculate sentiment over time for a specific brand
   const calculateSentimentOverTime = (brand: Brand) => {
-    // Get posts for the specific brand
-    const brandPosts = posts[brand] || [];
+    // Get posts for the specific brand, filtered by local platform
+    const brandPosts = filteredPosts[brand] || [];
     
     // Group by date and sentiment
     const countsByDate: Record<string, { positive: number; neutral: number; negative: number }> = {};
@@ -460,19 +508,99 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ platform, selecte
 
   if (!hasData && !checkAndFixTikTokData) {
     return (
-      <div className="mt-8 p-4 bg-white rounded-lg shadow-md">
+      <div className={`mt-8 p-4 rounded-lg shadow-md ${darkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
         <h2 className="text-xl font-bold mb-4">Sentiment Analysis</h2>
-        <EmptyChartFallback message={`No ${platform} data available for sentiment analysis`} />
+        <EmptyChartFallback message={`No ${localPlatform} data available for sentiment analysis`} />
       </div>
     );
   }
 
   return (
     // Root div styling is removed as it will be handled by the parent in DashboardOverview.tsx
-    <div>
-      {/* Title is now handled by DashboardOverview.tsx, descriptive paragraph can remain or be moved */}
+    <div className={darkMode ? 'text-white' : ''}>
+      {/* Local platform toggle for Sentiment Analysis */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-2 md:gap-0">
+        <h3 className="text-lg font-semibold">Sentiment Analysis</h3>
+        <div className="flex items-center gap-4">
+          <FormControl variant="outlined" size="small" className="min-w-[150px]" sx={{
+                          '& .MuiInputLabel-root': {
+                            color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
+                          },
+                          '& .MuiOutlinedInput-root': {
+                            color: darkMode ? 'white' : undefined,
+                            '& fieldset': {
+                              borderColor: darkMode ? 'rgba(255, 255, 255, 0.23)' : undefined
+                            },
+                            '&:hover fieldset': {
+                              borderColor: darkMode ? 'rgba(255, 255, 255, 0.5)' : undefined
+                            }
+                          },
+                          '& .MuiSelect-icon': {
+                            color: darkMode ? 'rgba(255, 255, 255, 0.7)' : undefined
+                          }
+                        }}>
+            <InputLabel id="sentiment-month-label">Date</InputLabel>
+            <Select
+              labelId="sentiment-month-label"
+              id="sentiment-month-select"
+              value={selectedMonth}
+              label="Date"
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    bgcolor: darkMode ? 'rgb(45, 45, 45)' : undefined,
+                    color: darkMode ? 'white' : undefined,
+                    '& .MuiMenuItem-root:hover': {
+                      bgcolor: darkMode ? 'rgba(255, 255, 255, 0.08)' : undefined
+                    }
+                  }
+                }
+              }}
+              onChange={(e: SelectChangeEvent<string>) => setSelectedMonth(e.target.value)}
+              style={{ minWidth: 120 }}
+            >
+              <MenuItem value="All (Feb-May)">All</MenuItem>
+              <MenuItem value="February">February</MenuItem>
+              <MenuItem value="March">March</MenuItem>
+              <MenuItem value="April">April</MenuItem>
+              <MenuItem value="May">May</MenuItem>
+            </Select>
+          </FormControl>
+          <ToggleButtonGroup
+            value={localPlatform}
+            exclusive
+            onChange={(_event: React.MouseEvent<HTMLElement>, newPlatform: 'Instagram' | 'TikTok' | null) => {
+              if (newPlatform) setLocalPlatform(newPlatform);
+            }}
+            size="small"
+            aria-label="Platform"
+            sx={{
+              backgroundColor: darkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)',
+              borderRadius: 2,
+              '& .MuiToggleButton-root': {
+                color: darkMode ? 'rgba(255,255,255,0.8)' : 'rgba(55,65,81,1)',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                px: 2.5,
+                py: 1,
+                '&.Mui-selected': {
+                  backgroundColor: darkMode ? 'rgba(0, 120, 212, 0.3)' : 'rgba(0, 120, 212, 0.12)',
+                  color: darkMode ? '#fff' : '#00539b',
+                },
+              },
+            }}
+          >
+            <ToggleButton value="Instagram" aria-label="Instagram">
+              Instagram
+            </ToggleButton>
+            <ToggleButton value="TikTok" aria-label="TikTok">
+              TikTok
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </div>
+      </div>
       <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-        Sentiment analysis of {platform} posts for selected brands based on post text/captions.
+        Sentiment analysis of {localPlatform} posts for selected brands based on post text/captions.
       </p>
       
       {checkAndFixTikTokData ? (
@@ -498,64 +626,6 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ platform, selecte
             </div>
           </div>
           
-          {/* Line Chart - Average Sentiment Score Over Time - Side by Side Comparison */}
-          <div className="bg-white dark:bg-gray-800/50 p-4 rounded-lg shadow"> {/* Adjusted inner card styling */}
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-md font-semibold text-gray-700 dark:text-gray-200">Average Sentiment Score Over Time</h3>
-              <FormControl variant="outlined" size="small" sx={{ minWidth: 150 }}>
-                <InputLabel id="competitor-select-label" sx={{color: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.7)' : undefined }}>Competitor Brand</InputLabel>
-                <Select
-                  labelId="competitor-select-label"
-                  id="competitor-select"
-                  value={selectedCompetitor}
-                  onChange={(e: SelectChangeEvent) => setSelectedCompetitor(e.target.value as Brand)}
-                  label="Competitor Brand"
-                  sx={{color: (theme) => theme.palette.mode === 'dark' ? 'white' : undefined, '& .MuiOutlinedInput-notchedOutline': {borderColor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.23)' : undefined}, '& .MuiSvgIcon-root': {color: (theme) => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.7)' : undefined}}}
-                >
-                  {selectedBrands.filter(brand => brand !== mainBrand).map(brand => (
-                    <MenuItem key={brand} value={brand}>{brand}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Nordstrom Chart */}
-              <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md">
-                <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 text-center">{mainBrand}</h4>
-                <div className="h-64">
-                  {averageSentimentOverTimeByBrand.labels.length === 0 ? (
-                    <EmptyChartFallback message="No time-series sentiment data" />
-                  ) : (
-                    <Line 
-                      data={{
-                        labels: averageSentimentOverTimeByBrand.labels,
-                        datasets: averageSentimentOverTimeByBrand.datasets.filter(ds => ds.label === mainBrand)
-                      }} 
-                      options={lineOptions} 
-                    />
-                  )}
-                </div>
-              </div>
-              
-              {/* Competitor Chart */}
-              <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md">
-                <h4 className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2 text-center">{selectedCompetitor}</h4>
-                <div className="h-64">
-                  {averageSentimentOverTimeByBrand.labels.length === 0 ? (
-                    <EmptyChartFallback message="No time-series sentiment data" />
-                  ) : (
-                    <Line 
-                      data={{
-                        labels: averageSentimentOverTimeByBrand.labels,
-                        datasets: averageSentimentOverTimeByBrand.datasets.filter(ds => ds.label === selectedCompetitor)
-                      }} 
-                      options={lineOptions} 
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
 
         </div>
       )}
