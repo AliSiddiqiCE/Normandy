@@ -1174,8 +1174,14 @@ const DashboardOverview: React.FC = () => {
     },
   }}
 >
-  <ToggleButton value="Instagram" aria-label="Instagram" sx={{ textTransform: 'none' }}>Instagram</ToggleButton>
-  <ToggleButton value="TikTok" aria-label="TikTok" sx={{ textTransform: 'none' }}>TikTok</ToggleButton>
+  <ToggleButton value="Instagram" aria-label="Instagram" sx={{ textTransform: 'none' }}>
+                <FaIcons.FaInstagram className="mr-2" />
+                Instagram
+              </ToggleButton>
+              <ToggleButton value="TikTok" aria-label="TikTok" sx={{ textTransform: 'none' }}>
+                <FaIcons.FaTiktok className="mr-2" />
+                TikTok
+              </ToggleButton>
 </ToggleButtonGroup>
             </div>
           </div>
@@ -1851,22 +1857,8 @@ const DashboardOverview: React.FC = () => {
             </h2>
           </div>
           
-          {/* Hashtag Analytics (per platform) */}
-          {/* Hashtag Analytics (per platform) */}
-          {(filterOptions.platform === 'Instagram' || filterOptions.platform === 'TikTok') && (
-            <HashtagSection
-              platform={filterOptions.platform as 'Instagram' | 'TikTok'}
-              selectedBrands={selectedBrands}
-              posts={selectedBrands.reduce((acc, brand) => {
-                if (filterOptions.platform === 'Instagram') {
-                  acc[brand] = socialData.instagram[brand]?.posts || [];
-                } else {
-                  acc[brand] = socialData.tiktok[brand]?.posts || [];
-                }
-                return acc;
-              }, {} as Record<Brand, InstagramPost[] | TikTokPost[]>)}
-            />
-          )}
+          {/* Hashtag Analytics - now manages its own platform state */}
+          <HashtagSection selectedBrands={selectedBrands} />
         </motion.div>
       </div>
 
@@ -1905,11 +1897,13 @@ const DashboardOverview: React.FC = () => {
             }}
           >
             <ToggleButton value="Instagram" aria-label="Instagram" sx={{ textTransform: 'none' }}>
-              Instagram
-            </ToggleButton>
-            <ToggleButton value="TikTok" aria-label="TikTok" sx={{ textTransform: 'none' }}>
-              TikTok
-            </ToggleButton>
+                          <FaIcons.FaInstagram className="mr-2" />
+                          Instagram
+                        </ToggleButton>
+                        <ToggleButton value="TikTok" aria-label="TikTok" sx={{ textTransform: 'none' }}>
+                          <FaIcons.FaTiktok className="mr-2" />
+                          TikTok
+                        </ToggleButton>
           </ToggleButtonGroup>
         </div>
         {activeTopPostsPlatform === 'Instagram' ? (

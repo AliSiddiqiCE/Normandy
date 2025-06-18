@@ -18,7 +18,7 @@ import { Brand, InstagramPost, SentimentLabel, TikTokPost } from '../../types';
 import { BRAND_COLORS, getColorByBrand, generateColors } from '../../utils/chartUtils';
 import EmptyChartFallback from '../../components/common/EmptyChartFallback';
 import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, ToggleButton, ToggleButtonGroup } from '@mui/material';
-
+import * as FaIcons from 'react-icons/fa';
 // Register ChartJS components
 ChartJS.register(
   CategoryScale,
@@ -591,9 +591,11 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ selectedBrands, p
             }}
           >
             <ToggleButton value="Instagram" aria-label="Instagram" sx={{ textTransform: 'none' }}>
+              <FaIcons.FaInstagram className="mr-2" />
               Instagram
             </ToggleButton>
             <ToggleButton value="TikTok" aria-label="TikTok" sx={{ textTransform: 'none' }}>
+              <FaIcons.FaTiktok className="mr-2" />
               TikTok
             </ToggleButton>
           </ToggleButtonGroup>
