@@ -590,10 +590,10 @@ const SentimentAnalysis: React.FC<SentimentAnalysisProps> = ({ selectedBrands, p
               },
             }}
           >
-            <ToggleButton value="Instagram" aria-label="Instagram">
+            <ToggleButton value="Instagram" aria-label="Instagram" sx={{ textTransform: 'none' }}>
               Instagram
             </ToggleButton>
-            <ToggleButton value="TikTok" aria-label="TikTok">
+            <ToggleButton value="TikTok" aria-label="TikTok" sx={{ textTransform: 'none' }}>
               TikTok
             </ToggleButton>
           </ToggleButtonGroup>
